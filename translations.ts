@@ -48,17 +48,17 @@ export const TRANSLATIONS = {
     
     // Discovery - BNO Deck Specific
     bnoContextToggle: "Using the HK BNO / Migrant Workbook?",
-    drawCard: "Start 6-Card Journey",
-    skipCard: "Skip / Draw Another",
-    cardContext: "Reflecting on Card",
+    drawCard: "Start 6-Question Journey",
+    skipCard: "Skip / New Question",
+    cardContext: "Reflecting on Question",
     journeyTitle: "The Migration Arc",
-    journeyIntro: "We will draw 6 cards to explore your story from Roots (Past) through Transition (The Shift) to Growth (Future).",
+    journeyIntro: "We will answer 6 questions to explore your story from Roots (Past) through Transition (The Shift) to Growth (Future).",
     stageRoots: "Roots (Past)",
     stageTransition: "The Shift (Transition)",
     stageGrowth: "Growth (Future)",
-    nextCard: "Next Card",
+    nextCard: "Next Question",
     analyzeJourney: "Analyze Full Journey",
-    journeyProgress: "Card",
+    journeyProgress: "Question",
     
     // Phase 1: Weigh & Assess
     phase1Title: "Phase 1: Weigh & Assess",
@@ -276,17 +276,17 @@ export const TRANSLATIONS = {
     
     // Discovery - BNO Deck Specific
     bnoContextToggle: "使用 BNO / 移英港人練習冊？",
-    drawCard: "開始 6 張卡片旅程",
-    skipCard: "跳過 / 抽下一張",
-    cardContext: "反思卡片",
+    drawCard: "開始 6 問題旅程",
+    skipCard: "跳過 / 換一題",
+    cardContext: "反思問題",
     journeyTitle: "移民歷程",
-    journeyIntro: "我們將抽取 6 張卡片，從根源（過去）、轉變（變動）到成長（未來）探索你的故事。",
+    journeyIntro: "我們將抽取 6 個問題，從根源（過去）、轉變（變動）到成長（未來）探索你的故事。",
     stageRoots: "根源 (過去)",
     stageTransition: "轉變 (變動)",
     stageGrowth: "成長 (未來)",
-    nextCard: "下一張",
+    nextCard: "下一題",
     analyzeJourney: "分析完整旅程",
-    journeyProgress: "卡片",
+    journeyProgress: "問題",
 
     // Phase 1
     phase1Title: "第一階段：衡量與評估",

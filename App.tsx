@@ -49,7 +49,8 @@ import {
   Play,
   ArrowDown,
   History,
-  Activity
+  Activity,
+  User
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
 
@@ -271,6 +272,33 @@ export default function App() {
       setJourneyAnswers([]);
       setCurrentJourneyIndex(0);
       setIsJourneyActive(true);
+      setDiscoveryReflection('');
+  };
+
+  const swapJourneyCard = () => {
+      const currentCard = journeyCards[currentJourneyIndex];
+      // Get all currently used IDs to avoid picking duplicates
+      const usedIds = new Set(journeyCards.map(c => c.id));
+      
+      // Pool of available cards: Same category, not currently used
+      const available = REFLECTION_CARDS.filter(c => 
+          c.category === currentCard.category && !usedIds.has(c.id)
+      );
+
+      if (available.length === 0) {
+          showNotification("No other cards available in this category.");
+          return;
+      }
+
+      // Random pick
+      const newCard = available[Math.floor(Math.random() * available.length)];
+      
+      // Update state
+      const newJourney = [...journeyCards];
+      newJourney[currentJourneyIndex] = newCard;
+      setJourneyCards(newJourney);
+      
+      // Clear input for the new question
       setDiscoveryReflection('');
   };
 
@@ -554,22 +582,19 @@ export default function App() {
                                         <span>{t.journeyProgress} {currentJourneyIndex + 1}/6</span>
                                     </div>
 
-                                    <div className="relative group">
-                                         <div className="aspect-video bg-slate-800 rounded-xl overflow-hidden border border-slate-700 relative">
-                                              <img 
-                                                  src={currentCard!.imagePath} 
-                                                  alt="Reflection Cue" 
-                                                  className="w-full h-full object-cover opacity-90"
-                                              />
-                                         </div>
+                                    {/* Question Display - REPLACED IMAGES */}
+                                    <div className="flex-1 flex flex-col justify-center items-center p-8 bg-slate-800/50 rounded-xl border border-slate-700/50 text-center space-y-4 mb-4">
+                                        <div className="p-3 bg-primary-600/20 text-primary-400 rounded-full">
+                                            {currentCard!.category === 'past' && <History size={32}/>}
+                                            {currentCard!.category === 'transition' && <Shuffle size={32}/>}
+                                            {currentCard!.category === 'future' && <TrendingUp size={32}/>}
+                                            {currentCard!.category === 'identity' && <User size={32}/>}
+                                        </div>
+                                        <p className="text-xl md:text-2xl font-medium text-white leading-relaxed">
+                                            "{currentCard!.questions[language]}"
+                                        </p>
                                     </div>
                                     
-                                    <div className="bg-slate-800/50 p-4 rounded-lg border-l-4 border-primary-500">
-                                         <p className="text-white text-lg font-medium leading-relaxed">
-                                             "{currentCard!.questions[language]}"
-                                         </p>
-                                    </div>
-
                                     <textarea 
                                         value={discoveryReflection}
                                         onChange={(e) => setDiscoveryReflection(e.target.value)}
@@ -577,11 +602,19 @@ export default function App() {
                                         placeholder={t.jotDown}
                                     />
                                     
-                                    <div className="mt-auto">
+                                    <div className="mt-auto flex gap-3">
+                                        <button 
+                                            onClick={swapJourneyCard}
+                                            className="px-4 py-3 rounded-lg text-sm font-medium border border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-center gap-2"
+                                            title={t.skipCard}
+                                        >
+                                            <Shuffle size={16} />
+                                            <span className="hidden sm:inline">{t.skipCard}</span>
+                                        </button>
                                         <button 
                                             onClick={nextJourneyCard}
                                             disabled={isDiscovering || !discoveryReflection}
-                                            className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 w-full"
+                                            className="flex-1 bg-primary-600 hover:bg-primary-500 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                         >
                                             {isDiscovering ? <Loader2 className="animate-spin" size={16} /> : (currentJourneyIndex === 5 ? <Sparkles size={16} /> : <ArrowRight size={16} />)}
                                             {currentJourneyIndex === 5 ? t.analyzeJourney : t.nextCard}

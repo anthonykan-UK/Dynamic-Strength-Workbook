@@ -1,6 +1,5 @@
 export interface ReflectionCard {
   id: number;
-  imagePath: string;
   category: 'past' | 'transition' | 'future' | 'identity';
   questions: {
     'en-GB': string;
@@ -11,7 +10,6 @@ export interface ReflectionCard {
 export const REFLECTION_CARDS: ReflectionCard[] = [
   {
     id: 1,
-    imagePath: '/assets/cards/card_01.jpg',
     category: 'transition',
     questions: {
       'en-GB': "If you had to use three key words to describe your life since coming to the UK, which three would you choose, and why?",
@@ -20,7 +18,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 2,
-    imagePath: '/assets/cards/card_02.jpg',
     category: 'transition',
     questions: {
       'en-GB': "In the first few months after arriving in the UK, what gave you the biggest feeling of 'culture shock'? How would you describe what that shock felt like at the time?",
@@ -29,7 +26,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 3,
-    imagePath: '/assets/cards/card_03.jpg',
     category: 'transition',
     questions: {
       'en-GB': "In your everyday life in the UK, is there a small habit or routine that makes you feel, 'I'm finally starting to settle'? How does that habit make you feel?",
@@ -38,7 +34,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 4,
-    imagePath: '/assets/cards/card_04.jpg',
     category: 'transition',
     questions: {
       'en-GB': "What was the most recent moment when you thought, 'Oh, I can actually enjoy myself here too'? What was happening then?",
@@ -47,7 +42,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 5,
-    imagePath: '/assets/cards/card_05.jpg',
     category: 'transition',
     questions: {
       'en-GB': "In the process of settling your family in the UK, which part have you found the hardest (e.g., housing, schools, emotions, finances)? What has this affected most in your life?",
@@ -56,7 +50,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 6,
-    imagePath: '/assets/cards/card_06.jpg',
     category: 'identity',
     questions: {
       'en-GB': "Since moving to the UK, do you feel your role in the family has changed? What have you taken on more of, and what have you done less of? How does that make you feel?",
@@ -65,7 +58,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 7,
-    imagePath: '/assets/cards/card_07.jpg',
     category: 'past',
     questions: {
       'en-GB': "When your family was deciding whether to move to the UK, what is one conversation you remember most clearly? What did that conversation mean to you?",
@@ -74,7 +66,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 8,
-    imagePath: '/assets/cards/card_08.jpg',
     category: 'past',
     questions: {
       'en-GB': "For the sake of your family, what is the most difficult decision you have made in this whole moving journey? How did you feel after making it?",
@@ -83,7 +74,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 9,
-    imagePath: '/assets/cards/card_09.jpg',
     category: 'past',
     questions: {
       'en-GB': "In your view, how is your family's pressure in the UK different from when you were in Hong Kong? Which kind of pressure do you personally feel the most?",
@@ -92,7 +82,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 10,
-    imagePath: '/assets/cards/card_10.jpg',
     category: 'identity',
     questions: {
       'en-GB': "When there is conflict or disagreement in the family, what role do you usually play? Is this similar to the role you played in Hong Kong?",
@@ -101,7 +90,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 11,
-    imagePath: '/assets/cards/card_11.jpg',
     category: 'transition',
     questions: {
       'en-GB': "Has there been a moment when you suddenly felt, 'We are all so tired, but we are also very strong as a family'? What was happening at that time?",
@@ -110,7 +98,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 12,
-    imagePath: '/assets/cards/card_12.jpg',
     category: 'identity',
     questions: {
       'en-GB': "If you could say one very honest thing to your family that is usually hard to say out loud, what would you say?",
@@ -119,7 +106,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 13,
-    imagePath: '/assets/cards/card_13.jpg',
     category: 'transition',
     questions: {
       'en-GB': "Before coming to the UK, what did you imagine your future work would be like? How is it different from your current reality? How does that gap make you feel?",
@@ -128,7 +114,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 14,
-    imagePath: '/assets/cards/card_14.jpg',
     category: 'transition',
     questions: {
       'en-GB': "In the process of looking for work, changing career or re-qualifying in the UK, was there a moment when you felt particularly defeated? What were you saying to yourself in your mind at that time?",
@@ -137,7 +122,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 15,
-    imagePath: '/assets/cards/card_15.jpg',
     category: 'future',
     questions: {
       'en-GB': "Since coming to the UK, have you discovered any 'unexpected advantages' in your work or abilities? For example a certain experience, language skill or attitude?",
@@ -146,7 +130,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 16,
-    imagePath: '/assets/cards/card_16.jpg',
     category: 'future',
     questions: {
       'en-GB': "If you didn't have to think about practical limits (such as visa, qualifications, money), what kind of job or career would you most like to try, and why?",
@@ -155,7 +138,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 17,
-    imagePath: '/assets/cards/card_17.jpg',
     category: 'transition',
     questions: {
       'en-GB': "In the UK job market or workplace, what do you feel is the biggest challenge of being a Hongkonger / a new migrant? How do you see this challenge?",
@@ -164,7 +146,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 18,
-    imagePath: '/assets/cards/card_18.jpg',
     category: 'past',
     questions: {
       'en-GB': "Thinking of your past work experience in Hong Kong, is there a part of it you would really like to carry on using in the UK? What value or ability does that represent in you?",
@@ -173,7 +154,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 19,
-    imagePath: '/assets/cards/card_19.jpg',
     category: 'future',
     questions: {
       'en-GB': "When you think about your future work, what are the three things you care about most (e.g. income, flexible time, meaning, stability)? Why are these three things so important to you?",
@@ -182,7 +162,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 20,
-    imagePath: '/assets/cards/card_20.jpg',
     category: 'past',
     questions: {
       'en-GB': "Has anyone (a colleague, friend or mentor) ever given you a phrase or a kind of support that really mattered in your career? How does that still affect you now when you think of it?",
@@ -191,7 +170,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 21,
-    imagePath: '/assets/cards/card_21.jpg',
     category: 'identity',
     questions: {
       'en-GB': "If you used an image to represent your current identity (e.g. between Hong Kong and the UK, new migrant, parent, professional – all overlapping), what picture would you choose? What does that picture say about you?",
@@ -200,7 +178,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 22,
-    imagePath: '/assets/cards/card_22.jpg',
     category: 'identity',
     questions: {
       'en-GB': "For you personally, what are the core qualities of being 'a Hongkonger'? In your UK life, have these qualities helped you, or have they sometimes created clashes?",
@@ -209,7 +186,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 23,
-    imagePath: '/assets/cards/card_23.jpg',
     category: 'transition',
     questions: {
       'en-GB': "During your time living in the UK, has there been a moment when you strongly felt, 'I really am an outsider here'? What were your real emotions in that moment?",
@@ -218,7 +194,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 24,
-    imagePath: '/assets/cards/card_24.jpg',
     category: 'transition',
     questions: {
       'en-GB': "And has there been a moment when you felt, 'I'm starting to feel a bit of belonging here'? What happened at that time?",
@@ -227,7 +202,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 25,
-    imagePath: '/assets/cards/card_25.jpg',
     category: 'identity',
     questions: {
       'en-GB': "How would you introduce your story to a British friend? When you tell this version of yourself, is there any part that still feels difficult for you to talk about?",
@@ -236,7 +210,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 26,
-    imagePath: '/assets/cards/card_26.jpg',
     category: 'identity',
     questions: {
       'en-GB': "In your heart, what does the word 'home' mean to you now? How is that different from what 'home' meant when you were in Hong Kong?",
@@ -245,7 +218,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 27,
-    imagePath: '/assets/cards/card_27.jpg',
     category: 'future',
     questions: {
       'en-GB': "Since coming to the UK, has your definition of 'a successful life' changed? How would you now describe 'a life that is going reasonably well'?",
@@ -254,7 +226,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 28,
-    imagePath: '/assets/cards/card_28.jpg',
     category: 'identity',
     questions: {
       'en-GB': "When it comes to identity, where do you feel the strongest tension or pull inside yourself at the moment? How do you usually live with or handle that tension?",
@@ -263,7 +234,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 29,
-    imagePath: '/assets/cards/card_29.jpg',
     category: 'future',
     questions: {
       'en-GB': "Looking back at the changes in the past few years, in what ways do you feel you have become stronger or more mature? Can you share one concrete example?",
@@ -272,7 +242,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 30,
-    imagePath: '/assets/cards/card_30.jpg',
     category: 'future',
     questions: {
       'en-GB': "If, in the next three years, you could create one small change for yourself and your family, what would it be? What would that change symbolise for you?",
@@ -281,7 +250,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 31,
-    imagePath: '/assets/cards/card_31.jpg',
     category: 'past',
     questions: {
       'en-GB': "Imagine a Hong Kong family who has just arrived in the UK, very similar to how you were when you first came, asks you for advice. What three things would you most want to say to them? Are these also three things you'd like to say to yourself right now?",
@@ -290,7 +258,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 32,
-    imagePath: '/assets/cards/card_32.jpg',
     category: 'future',
     questions: {
       'en-GB': "If your story of coming to and living in the UK was a book, which chapter do you think you are in now? What would you like the title of the next chapter to be, and why?",
@@ -299,7 +266,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 33,
-    imagePath: '/assets/cards/card_33.jpg',
     category: 'past',
     questions: {
       'en-GB': "When you think back over all the difficult years, is there a phrase or belief that has kept you going? If you turned it into a personal motto, what would it be?",
@@ -308,7 +274,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 34,
-    imagePath: '/assets/cards/card_34.jpg',
     category: 'future',
     questions: {
       'en-GB': "Imagine that five years from now, a journalist interviews you and asks, 'What are you most proud of from these last few years?' How would you hope to be able to answer?",
@@ -317,7 +282,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 35,
-    imagePath: '/assets/cards/card_35.jpg',
     category: 'future',
     questions: {
       'en-GB': "If you could adjust the balance between 'feeling safe', 'having freedom' and 'a sense of achievement' in your future life, which one would you most want to improve first, and why?",
@@ -326,7 +290,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 36,
-    imagePath: '/assets/cards/card_36.jpg',
     category: 'future',
     questions: {
       'en-GB': "In the coming years, which group of people or what kind of people would you most like to help or have a positive impact on? How does that connect with your own past experiences?",
@@ -335,7 +298,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 37,
-    imagePath: '/assets/cards/card_37.jpg',
     category: 'future',
     questions: {
       'en-GB': "Imagine there is a 'more calm and steady' version of you walking towards you from the future. What small step do you think they would encourage you to take today, as a move towards that future?",
@@ -344,7 +306,6 @@ export const REFLECTION_CARDS: ReflectionCard[] = [
   },
   {
     id: 38,
-    imagePath: '/assets/cards/card_38.jpg',
     category: 'future',
     questions: {
       'en-GB': "When you imagine your older self, at the end of life, looking back at you now, what do you hope they will see? How would you like them to speak about the courage you are showing in this stage of your life?",
