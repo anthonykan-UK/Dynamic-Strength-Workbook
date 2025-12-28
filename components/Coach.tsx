@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { UserData } from '../types';
+import { UserData, Language } from '../types';
+import { TRANSLATIONS } from '../translations';
 import { streamCoachResponse } from '../services/ai';
 import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -7,6 +8,7 @@ import { GenerateContentResponse } from '@google/genai';
 
 interface CoachProps {
   userData: UserData;
+  language: Language;
 }
 
 interface ChatMessage {
@@ -14,12 +16,20 @@ interface ChatMessage {
   text: string;
 }
 
-export const Coach: React.FC<CoachProps> = ({ userData }) => {
+export const Coach: React.FC<CoachProps> = ({ userData, language }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: "Hi! I'm your Dynamic Strength Assistant. I'm here to help you find clarity. Where should we start today?" }
-  ]);
+  const t = TRANSLATIONS[language];
+  
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  
+  // Update welcome message when language or open state changes if empty
+  useEffect(() => {
+     if (messages.length === 0) {
+         setMessages([{ role: 'model', text: t.coachWelcome }]);
+     }
+  }, [language, t.coachWelcome]);
+
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +56,7 @@ export const Coach: React.FC<CoachProps> = ({ userData }) => {
         parts: [{ text: m.text }]
       }));
 
-      const stream = await streamCoachResponse(userMsg, userData, history);
+      const stream = await streamCoachResponse(userMsg, userData, history, language);
       
       let fullResponse = "";
       setMessages(prev => [...prev, { role: 'model', text: '' }]);
@@ -63,7 +73,7 @@ export const Coach: React.FC<CoachProps> = ({ userData }) => {
         }
       }
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', text: "I'm having trouble connecting right now. Please try again later." }]);
+      setMessages(prev => [...prev, { role: 'model', text: t.coachError }]);
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +134,7 @@ export const Coach: React.FC<CoachProps> = ({ userData }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask for guidance..."
+            placeholder={t.askGuidance}
             className="w-full bg-slate-900 border border-slate-700 rounded-full py-3 px-4 pr-12 text-sm text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
           />
           <button
