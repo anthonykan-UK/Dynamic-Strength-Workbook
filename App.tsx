@@ -1120,7 +1120,7 @@ export default function App() {
                             onChange={(e) => updateShift(shift.id, 'territory', e.target.value)}
                             className="w-full bg-slate-800 border border-slate-700 text-white rounded p-2 focus:ring-1 focus:ring-primary-500"
                         >
-                            {TERRITORIES.map(tr => <option key={tr} value={tr}>{tr}</option>)}
+                             {TERRITORIES.map(tr => <option key={tr} value={tr}>{(t.territoryOptions as any)[tr] || tr}</option>)}
                         </select>
                     </div>
                     <div className="flex-1">

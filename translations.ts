@@ -144,6 +144,16 @@ export const TRANSLATIONS = {
     phase3Title: "Phase 3: Evaluate & Scale",
     phase3Subtitle: "From Planning to Practice. Awareness alone doesn't improve performance; deliberate practice does.",
     territory: "Territory (Possibility Mapping)",
+    territoryOptions: {
+        'Work & Career': 'Work & Career',
+        'Resources & Assets': 'Resources & Assets',
+        'Relationships & Community': 'Relationships & Community',
+        'Learning & Growth': 'Learning & Growth',
+        'Wellbeing & Presence': 'Wellbeing & Presence',
+        'Creativity & Expression': 'Creativity & Expression',
+        'Environment & Space': 'Environment & Space',
+        'Leadership': 'Leadership'
+    },
     poweringAnchor: "Powering Anchor",
     shiftAction: "The 5% Shift",
     suggestIdeas: "AI Suggestions",
@@ -260,7 +270,7 @@ export const TRANSLATIONS = {
             { title: "Daily Routine", desc: "The engine room. Log your daily practice, track energy, and get AI feedback." }
         ]
     },
-    
+
     // Notifications
     notifications: {
       storyAnalyzed: "Story analyzed!",
@@ -421,6 +431,16 @@ export const TRANSLATIONS = {
     phase3Title: "第三階段：評估與擴展",
     phase3Subtitle: "從計畫到實踐。光有意識不會提高表現；刻意練習才會。",
     territory: "範疇 (可能性繪圖)",
+    territoryOptions: {
+        'Work & Career': '工作與事業',
+        'Resources & Assets': '資源與資產',
+        'Relationships & Community': '人際關係與社群',
+        'Learning & Growth': '學習與成長',
+        'Wellbeing & Presence': '身心健康與當下',
+        'Creativity & Expression': '創意與表達',
+        'Environment & Space': '環境與空間',
+        'Leadership': '領導力'
+    },
     poweringAnchor: "驅動錨點",
     shiftAction: "5% 微調",
     suggestIdeas: "AI 建議",
