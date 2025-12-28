@@ -45,7 +45,21 @@ export const TRANSLATIONS = {
     slotEmpty: "Slot empty",
     quickSelect: "Quick Select",
     saveStartPhase1: "Begin Phase 1: Weigh & Assess",
-
+    
+    // Discovery - BNO Deck Specific
+    bnoContextToggle: "Using the HK BNO / Migrant Workbook?",
+    drawCard: "Start 6-Card Journey",
+    skipCard: "Skip / Draw Another",
+    cardContext: "Reflecting on Card",
+    journeyTitle: "The Migration Arc",
+    journeyIntro: "We will draw 6 cards to explore your story from Roots (Past) through Transition (The Shift) to Growth (Future).",
+    stageRoots: "Roots (Past)",
+    stageTransition: "The Shift (Transition)",
+    stageGrowth: "Growth (Future)",
+    nextCard: "Next Card",
+    analyzeJourney: "Analyze Full Journey",
+    journeyProgress: "Card",
+    
     // Phase 1: Weigh & Assess
     phase1Title: "Phase 1: Weigh & Assess",
     phase1Subtitle: "\"The past is not a performance review. It's a resource library.\"",
@@ -69,6 +83,11 @@ export const TRANSLATIONS = {
     directionalIntention: "Directional Intention",
     yearlyThemeLabel: "One Focused Area or Theme",
     yearlyThemeHelp: "Not a rigid goal, but an intention lens. What territory are you drawn to explore?",
+    suggestTheme: "Suggest Theme from Phase 1 Strengths",
+    phase1Insight: "Context from Phase 1",
+    phase1InsightHelp: "You identified this drain earlier. Now, define a boundary to manage it.",
+    candidateAnchors: "Candidate Anchors (From Phase 1)",
+    candidateAnchorsHelp: "Select candidates to promote them to Core Anchors.",
     deconstruct: "Deconstruct Your Evidence",
     echoCheck: "Echo Check",
     actionPlaceholder: "Action: What specifically did you do?",
@@ -139,6 +158,9 @@ export const TRANSLATIONS = {
     
     // Weekly
     weeklyTitle: "Weekly Reflection",
+    weeklyContext: "Your Week in Motion",
+    weeklyContextDesc: "Review your data to spot patterns before you reflect.",
+    keyMoments: "Key Moments",
     autoDraft: "Auto-Draft with AI",
     analyzingLogs: "Analyzing your week...",
     winsLabel: "Momentum Wins",
@@ -149,6 +171,18 @@ export const TRANSLATIONS = {
     // Quarterly
     quarterlyTitle: "Quarterly Check-In",
     quarterlyDesc: "Every 3 months, pause to track what really shifts. Measure behavior change, not just feelings.",
+    quarterlyRewind: "Quarterly Rewind (Last 90 Days)",
+    topAnchor: "Top Anchor",
+    totalLogs: "Total Logs",
+    avgEnergy: "Avg Energy",
+    rewindIntro: "Before you reflect, look at your actual data.",
+    saveAndAnalyze: "Save & Generate Strategic Outlook",
+    analyzing: "Analyzing Quarter...",
+    strategicOutlook: "Strategic Outlook (AI)",
+    themesObserved: "Themes Observed",
+    growthTrajectory: "Growth Trajectory",
+    nextQuarterFocus: "Next Quarter Focus",
+    
     q_shifted: "1. What shifted?",
     q_shifted_help: "What improved in your decisions or impacts? What evidence shows growing capability?",
     q_flow: "2. What's creating flow?",
@@ -239,6 +273,20 @@ export const TRANSLATIONS = {
     slotEmpty: "空缺",
     quickSelect: "快速選擇",
     saveStartPhase1: "開始第一階段：衡量與評估",
+    
+    // Discovery - BNO Deck Specific
+    bnoContextToggle: "使用 BNO / 移英港人練習冊？",
+    drawCard: "開始 6 張卡片旅程",
+    skipCard: "跳過 / 抽下一張",
+    cardContext: "反思卡片",
+    journeyTitle: "移民歷程",
+    journeyIntro: "我們將抽取 6 張卡片，從根源（過去）、轉變（變動）到成長（未來）探索你的故事。",
+    stageRoots: "根源 (過去)",
+    stageTransition: "轉變 (變動)",
+    stageGrowth: "成長 (未來)",
+    nextCard: "下一張",
+    analyzeJourney: "分析完整旅程",
+    journeyProgress: "卡片",
 
     // Phase 1
     phase1Title: "第一階段：衡量與評估",
@@ -263,6 +311,11 @@ export const TRANSLATIONS = {
     directionalIntention: "方向性意圖",
     yearlyThemeLabel: "一個專注的領域或主題",
     yearlyThemeHelp: "不是僵化的目標，而是一個意圖透鏡。你被吸引去探索哪個領域？",
+    suggestTheme: "從第一階段優勢建議主題",
+    phase1Insight: "第一階段的背景",
+    phase1InsightHelp: "你早前識別了這個消耗點。現在，定義一個界線來管理它。",
+    candidateAnchors: "候選錨點 (來自第一階段)",
+    candidateAnchorsHelp: "選擇候選項目將其晉升為核心錨點。",
     deconstruct: "解構你的證據",
     echoCheck: "共鳴檢查",
     actionPlaceholder: "行動：你具體做了什麼？",
@@ -333,6 +386,9 @@ export const TRANSLATIONS = {
 
     // Weekly
     weeklyTitle: "每週反思",
+    weeklyContext: "你的一週動態",
+    weeklyContextDesc: "在反思前，先檢視你的數據以發現模式。",
+    keyMoments: "關鍵時刻",
     autoDraft: "AI 自動草擬",
     analyzingLogs: "正在分析你的一週...",
     winsLabel: "動力勝利",
@@ -343,6 +399,18 @@ export const TRANSLATIONS = {
     // Quarterly
     quarterlyTitle: "季度檢視",
     quarterlyDesc: "每 3 個月，暫停一下追蹤什麼真正改變了。衡量行為改變，而不僅僅是感覺。",
+    quarterlyRewind: "季度回顧 (過去 90 天)",
+    topAnchor: "最高頻錨點",
+    totalLogs: "總日誌",
+    avgEnergy: "平均能量",
+    rewindIntro: "在反思之前，看看你的實際數據。",
+    saveAndAnalyze: "儲存並生成策略展望",
+    analyzing: "正在分析季度...",
+    strategicOutlook: "策略展望 (AI)",
+    themesObserved: "觀察到的主題",
+    growthTrajectory: "成長軌跡",
+    nextQuarterFocus: "下季焦點",
+
     q_shifted: "1. 什麼改變了？",
     q_shifted_help: "你的決定或影響有什麼改善？有什麼證據顯示能力增長？",
     q_flow: "2. 什麼正在創造心流？",

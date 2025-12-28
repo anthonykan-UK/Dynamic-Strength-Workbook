@@ -7,10 +7,12 @@ import {
   Story, 
   TERRITORIES, 
   DailyLog,
-  COMMON_STRENGTHS 
+  COMMON_STRENGTHS,
+  QuarterlyCheckIn
 } from './types';
 import { TRANSLATIONS } from './translations';
-import { analyzeStoryWithAI, suggestShiftsWithAI, discoverStrengthsWithAI, generateDailySpark, summarizeWeek } from './services/ai';
+import { REFLECTION_CARDS, ReflectionCard } from './constants';
+import { analyzeStoryWithAI, suggestShiftsWithAI, discoverStrengthsWithAI, generateDailySpark, summarizeWeek, analyzeJourneyWithAI, JourneyEntry, suggestThemeWithAI, analyzeQuarterlyCheckIn } from './services/ai';
 import { Layout } from './components/Layout';
 import { Coach } from './components/Coach';
 import { 
@@ -40,9 +42,16 @@ import {
   Scale,
   Zap,
   Flame,
-  Wand2
+  Wand2,
+  Shuffle,
+  Eye,
+  RefreshCw,
+  Play,
+  ArrowDown,
+  History,
+  Activity
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
 
 export default function App() {
   // --- State ---
@@ -69,6 +78,43 @@ export default function App() {
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [selectedDiscoveryStrengths, setSelectedDiscoveryStrengths] = useState<string[]>([]);
   const [promptIndex, setPromptIndex] = useState(0);
+  
+  // BNO Deck State - Journey
+  const [journeyCards, setJourneyCards] = useState<ReflectionCard[]>([]);
+  const [journeyAnswers, setJourneyAnswers] = useState<JourneyEntry[]>([]);
+  const [currentJourneyIndex, setCurrentJourneyIndex] = useState(0);
+  const [isJourneyActive, setIsJourneyActive] = useState(false);
+
+  // Phase 2 State
+  const [isSuggestingTheme, setIsSuggestingTheme] = useState(false);
+
+  // Dashboard State (Lifted)
+  const [todayLog, setTodayLog] = useState({
+      anchor: '',
+      reflection: '',
+      energy: 3
+  });
+  const [isLogging, setIsLogging] = useState(false);
+  const [lastSpark, setLastSpark] = useState<string | null>(null);
+
+  // Weekly State (Lifted)
+  const [weeklyData, setWeeklyData] = useState({
+      wins: '',
+      challenges: '',
+      theme: '',
+      focus: ''
+  });
+  const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // Quarterly State (Lifted)
+  const [quarterlyData, setQuarterlyData] = useState({
+      shifted: '',
+      creatingFlow: '',
+      needsAdjustment: '',
+      emerging: ''
+  });
+  const [isAnalyzingQuarter, setIsAnalyzingQuarter] = useState(false);
+  const [latestQuarterlyAnalysis, setLatestQuarterlyAnalysis] = useState<QuarterlyCheckIn['aiAnalysis'] | null>(null);
 
   // Phase 2 Definitions Toggle
   const [showDefinitions, setShowDefinitions] = useState(false);
@@ -151,6 +197,16 @@ export default function App() {
     newAnchors[index] = value;
     setUserData({ ...userData, coreAnchors: newAnchors });
   };
+  
+  const selectCandidateToAnchor = (candidate: string) => {
+      // Find first empty slot
+      const emptyIndex = userData.coreAnchors.findIndex(a => !a);
+      if (emptyIndex !== -1) {
+          updateAnchor(emptyIndex, candidate);
+      } else {
+          showNotification("All 5 Anchor slots are full. Clear one to add.");
+      }
+  };
 
   const addShift = () => {
     setUserData({
@@ -195,12 +251,68 @@ export default function App() {
     });
   };
 
-  const handleDiscoverySubmit = async () => {
+  // --- Discovery Journey Handlers ---
+
+  const startJourney = () => {
+      // Logic to select 2 past, 2 transition, 2 future
+      const pastCards = REFLECTION_CARDS.filter(c => c.category === 'past');
+      const transitionCards = REFLECTION_CARDS.filter(c => c.category === 'transition');
+      const futureCards = REFLECTION_CARDS.filter(c => c.category === 'future');
+
+      const shuffle = (array: ReflectionCard[]) => array.sort(() => 0.5 - Math.random());
+
+      const selected = [
+          ...shuffle(pastCards).slice(0, 2),
+          ...shuffle(transitionCards).slice(0, 2),
+          ...shuffle(futureCards).slice(0, 2)
+      ];
+
+      setJourneyCards(selected);
+      setJourneyAnswers([]);
+      setCurrentJourneyIndex(0);
+      setIsJourneyActive(true);
+      setDiscoveryReflection('');
+  };
+
+  const nextJourneyCard = async () => {
+      if (!discoveryReflection.trim()) return;
+
+      const currentCard = journeyCards[currentJourneyIndex];
+      const entry: JourneyEntry = {
+          stage: currentCard.category,
+          question: currentCard.questions[language],
+          answer: discoveryReflection
+      };
+
+      const newAnswers = [...journeyAnswers, entry];
+      setJourneyAnswers(newAnswers);
+      setDiscoveryReflection('');
+
+      if (currentJourneyIndex < 5) {
+          setCurrentJourneyIndex(prev => prev + 1);
+      } else {
+          // Finished 6 cards, analyze
+          setIsDiscovering(true);
+          try {
+              const suggestions = await analyzeJourneyWithAI(newAnswers, language);
+              const combined = Array.from(new Set([...selectedDiscoveryStrengths, ...suggestions])).slice(0, 5);
+              setSelectedDiscoveryStrengths(combined);
+              showNotification(t.notifications.strengthsIdentified);
+              setIsJourneyActive(false); // Reset to summary view
+          } catch(e) {
+              showNotification(t.notifications.failedReflect);
+          } finally {
+              setIsDiscovering(false);
+          }
+      }
+  };
+
+  // Standard single prompt submit (for non-BNO or fallback)
+  const handleSingleDiscoverySubmit = async () => {
       if(!discoveryReflection.trim()) return;
       setIsDiscovering(true);
       try {
           const suggestions = await discoverStrengthsWithAI(discoveryReflection, language);
-          // Auto-select the first 5 suggested, or merge with existing
           const combined = Array.from(new Set([...selectedDiscoveryStrengths, ...suggestions])).slice(0, 5);
           setSelectedDiscoveryStrengths(combined);
           showNotification(t.notifications.strengthsIdentified);
@@ -224,7 +336,6 @@ export default function App() {
   };
 
   const saveDiscoveryToPhase1 = () => {
-      // Pad with empty strings if less than 5
       const newStrengths = [...selectedDiscoveryStrengths];
       while(newStrengths.length < 5) newStrengths.push("");
       setUserData({ ...userData, assessmentStrengths: newStrengths });
@@ -235,7 +346,7 @@ export default function App() {
   const nextPrompt = () => {
       setPromptIndex((prev) => (prev + 1) % t.prompts.length);
   };
-
+  
   const addDailyLog = (log: DailyLog) => {
     setUserData(prev => ({
       ...prev,
@@ -244,30 +355,108 @@ export default function App() {
     showNotification(t.notifications.dailyLogged);
   };
 
-  const [quarterlyData, setQuarterlyData] = useState({
-      shifted: '',
-      creatingFlow: '',
-      needsAdjustment: '',
-      emerging: ''
-  });
-  
-  const saveQuarterly = () => {
-      const newQ: any = {
+  const saveAndAnalyzeQuarterly = async () => {
+      setIsAnalyzingQuarter(true);
+      const newQ: QuarterlyCheckIn = {
           id: crypto.randomUUID(),
           date: new Date().toISOString(),
           ...quarterlyData
       };
-      setUserData(prev => ({
-          ...prev,
-          quarterlyCheckIns: [newQ, ...prev.quarterlyCheckIns]
-      }));
-      setQuarterlyData({ shifted: '', creatingFlow: '', needsAdjustment: '', emerging: '' });
-      showNotification(t.notifications.quarterlySaved);
+
+      try {
+          // Get recent logs (last 90 days)
+          const ninetyDaysAgo = new Date();
+          ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+          
+          const recentLogs = userData.dailyLogs.filter(l => new Date(l.date) > ninetyDaysAgo);
+          const recentWeeklies = userData.weeklyReflections.filter(w => new Date(w.date) > ninetyDaysAgo);
+
+          const analysis = await analyzeQuarterlyCheckIn(newQ, recentLogs, recentWeeklies, language);
+          newQ.aiAnalysis = analysis;
+          setLatestQuarterlyAnalysis(analysis);
+
+          setUserData(prev => ({
+              ...prev,
+              quarterlyCheckIns: [newQ, ...prev.quarterlyCheckIns]
+          }));
+          
+          setQuarterlyData({ shifted: '', creatingFlow: '', needsAdjustment: '', emerging: '' });
+          showNotification(t.notifications.quarterlySaved);
+      } catch (e) {
+          // Fallback save without analysis if AI fails
+          setUserData(prev => ({
+              ...prev,
+              quarterlyCheckIns: [newQ, ...prev.quarterlyCheckIns]
+          }));
+          showNotification(t.notifications.quarterlySaved + " (Analysis unavailable)");
+      } finally {
+          setIsAnalyzingQuarter(false);
+      }
+  };
+
+  const handleLogSubmit = async () => {
+      if(!todayLog.anchor || !todayLog.reflection) return;
+      setIsLogging(true);
+      
+      // AI Feedback Loop: Get a Spark
+      let spark = "";
+      try {
+          spark = await generateDailySpark(todayLog.anchor, todayLog.reflection, language);
+          setLastSpark(spark);
+      } catch(e) {}
+
+      addDailyLog({
+          id: crypto.randomUUID(),
+          date: new Date().toISOString(),
+          anchorUsed: todayLog.anchor,
+          reflection: todayLog.reflection,
+          energyLevel: todayLog.energy,
+          aiFeedback: spark
+      });
+      
+      setTodayLog({ anchor: '', reflection: '', energy: 3 });
+      setIsLogging(false);
+  };
+
+  const handleAutoDraft = async () => {
+      setIsSummarizing(true);
+      try {
+          const summary = await summarizeWeek(userData.dailyLogs.slice(0, 7), language);
+          setWeeklyData(prev => ({
+              ...prev,
+              wins: summary.wins || '',
+              challenges: summary.challenges || '',
+              theme: summary.theme || ''
+          }));
+      } catch(e) {
+          showNotification("Could not auto-draft. Try again.");
+      } finally {
+          setIsSummarizing(false);
+      }
+  };
+  
+  const handleSuggestTheme = async () => {
+      const strengths = userData.assessmentStrengths.filter(Boolean);
+      if(strengths.length === 0) {
+          showNotification("Complete Phase 1 strengths first.");
+          return;
+      }
+      setIsSuggestingTheme(true);
+      try {
+          const theme = await suggestThemeWithAI(strengths, language);
+          setUserData({...userData, yearlyTheme: theme});
+      } catch(e) {
+          showNotification("Failed to suggest theme.");
+      } finally {
+          setIsSuggestingTheme(false);
+      }
   };
 
   // --- Render Views ---
 
-  const WelcomeView = () => (
+  // ... (renderWelcomeView, renderDiscoveryView, renderPhase1View, renderPhase2View, renderPhase3View, renderDashboardView omitted for brevity as they are unchanged) ...
+  // Re-declare them here for context of the file structure, assuming they exist as defined in previous turns.
+  const renderWelcomeView = () => (
     <div className="space-y-8 animate-fade-in">
       <div className="bg-gradient-to-br from-primary-600 to-indigo-800 p-8 rounded-2xl shadow-xl text-white">
         <h2 className="text-3xl font-bold mb-4">{t.welcomeTitle}</h2>
@@ -294,53 +483,151 @@ export default function App() {
     </div>
   );
 
-  const DiscoveryView = () => (
+  const renderDiscoveryView = () => {
+    // Current card object if active journey
+    const currentCard = isJourneyActive ? journeyCards[currentJourneyIndex] : null;
+    
+    const getStageLabel = (cat: string) => {
+        if(cat === 'past') return t.stageRoots;
+        if(cat === 'transition') return t.stageTransition;
+        if(cat === 'future') return t.stageGrowth;
+        return '';
+    };
+
+    return (
       <div className="space-y-8 max-w-4xl">
-        <header className="border-b border-slate-800 pb-4">
-            <h2 className="text-2xl font-bold text-white mb-2">{t.discoveryTitle}</h2>
-            <p className="text-slate-400">{t.discoverySubtitle}</p>
+        <header className="border-b border-slate-800 pb-4 flex flex-col md:flex-row justify-between md:items-end gap-4">
+            <div>
+                <h2 className="text-2xl font-bold text-white mb-2">{t.discoveryTitle}</h2>
+                <p className="text-slate-400">{t.discoverySubtitle}</p>
+            </div>
+            
+            {/* Audience Toggle */}
+            <div className="bg-slate-800 p-3 rounded-lg flex items-center gap-3 border border-slate-700">
+                 <span className="text-xs text-slate-300 font-medium">{t.bnoContextToggle}</span>
+                 <button 
+                    onClick={() => {
+                        const newState = !userData.useBNODeck;
+                        setUserData({...userData, useBNODeck: newState});
+                        // Reset journey state if toggled off
+                        if(!newState) {
+                            setIsJourneyActive(false);
+                            setJourneyCards([]);
+                        }
+                    }}
+                    className={`w-10 h-6 rounded-full transition-colors relative ${userData.useBNODeck ? 'bg-primary-600' : 'bg-slate-600'}`}
+                 >
+                     <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${userData.useBNODeck ? 'left-5' : 'left-1'}`} />
+                 </button>
+            </div>
         </header>
 
         <div className="grid md:grid-cols-2 gap-8">
             {/* AI Assist Column */}
             <div className="space-y-4">
-                <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                    <h3 className="font-semibold text-white mb-2 flex items-center gap-2">
-                        <Sparkles className="text-primary-500" size={18} /> {t.aiReflectionGuide}
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl relative overflow-hidden min-h-[500px] flex flex-col">
+                    <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+                        <Sparkles className="text-primary-500" size={18} /> 
+                        {userData.useBNODeck ? t.journeyTitle : t.aiReflectionGuide}
                     </h3>
                     
-                    {/* Interactive Prompt Carousel */}
-                    <div className="bg-slate-800/50 p-4 rounded-lg mb-4 border border-slate-700/50 relative">
-                        <div className="flex justify-between items-start mb-2">
-                            <span className="text-xs uppercase font-bold text-primary-400 tracking-wider">{t.sparkPrompt} {promptIndex + 1}/{t.prompts.length}</span>
-                            <button 
-                                onClick={nextPrompt} 
-                                className="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-2 py-1 rounded transition-colors"
-                            >
-                                {t.next} <ChevronRight size={12} />
-                            </button>
-                        </div>
-                        <p className="text-slate-200 font-medium leading-relaxed min-h-[3rem]">
-                           "{t.prompts[promptIndex]}"
-                        </p>
-                    </div>
+                    {userData.useBNODeck ? (
+                        // --- NARRATIVE DECK JOURNEY UI ---
+                        <div className="space-y-4 flex-1 flex flex-col">
+                            {!isJourneyActive ? (
+                                <div 
+                                    onClick={startJourney}
+                                    className="bg-slate-800/50 aspect-video rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-primary-500/50 hover:bg-slate-800 transition-all group flex-1"
+                                >
+                                     <Play className="text-slate-600 group-hover:text-primary-400 mb-4" size={48} />
+                                     <span className="text-lg text-white font-medium mb-2">{t.drawCard}</span>
+                                     <p className="text-sm text-slate-500 text-center max-w-xs">{t.journeyIntro}</p>
+                                </div>
+                            ) : (
+                                <div className="animate-fade-in space-y-4 flex-1 flex flex-col">
+                                    {/* Progress Bar */}
+                                    <div className="flex items-center gap-2 text-xs text-slate-400 uppercase tracking-wider mb-1">
+                                        <span className="text-primary-400 font-bold">{getStageLabel(currentCard!.category)}</span>
+                                        <span className="flex-1 h-1 bg-slate-800 rounded overflow-hidden">
+                                            <div className="h-full bg-primary-500 transition-all duration-500" style={{width: `${((currentJourneyIndex + 1)/6)*100}%`}}></div>
+                                        </span>
+                                        <span>{t.journeyProgress} {currentJourneyIndex + 1}/6</span>
+                                    </div>
 
-                    <p className="text-sm text-slate-500 mb-2">
-                        {t.jotDown}
-                    </p>
-                    <textarea 
-                        value={discoveryReflection}
-                        onChange={(e) => setDiscoveryReflection(e.target.value)}
-                        className="w-full h-48 bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed"
-                    />
-                    <button 
-                        onClick={handleDiscoverySubmit}
-                        disabled={isDiscovering || !discoveryReflection}
-                        className="bg-slate-800 hover:bg-slate-700 text-primary-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 w-full justify-center border border-slate-700"
-                    >
-                        {isDiscovering ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
-                        {t.analyzeSuggest}
-                    </button>
+                                    <div className="relative group">
+                                         <div className="aspect-video bg-slate-800 rounded-xl overflow-hidden border border-slate-700 relative">
+                                              <img 
+                                                  src={currentCard!.imagePath} 
+                                                  alt="Reflection Cue" 
+                                                  className="w-full h-full object-cover opacity-90"
+                                              />
+                                         </div>
+                                    </div>
+                                    
+                                    <div className="bg-slate-800/50 p-4 rounded-lg border-l-4 border-primary-500">
+                                         <p className="text-white text-lg font-medium leading-relaxed">
+                                             "{currentCard!.questions[language]}"
+                                         </p>
+                                    </div>
+
+                                    <textarea 
+                                        value={discoveryReflection}
+                                        onChange={(e) => setDiscoveryReflection(e.target.value)}
+                                        className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
+                                        placeholder={t.jotDown}
+                                    />
+                                    
+                                    <div className="mt-auto">
+                                        <button 
+                                            onClick={nextJourneyCard}
+                                            disabled={isDiscovering || !discoveryReflection}
+                                            className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 w-full"
+                                        >
+                                            {isDiscovering ? <Loader2 className="animate-spin" size={16} /> : (currentJourneyIndex === 5 ? <Sparkles size={16} /> : <ArrowRight size={16} />)}
+                                            {currentJourneyIndex === 5 ? t.analyzeJourney : t.nextCard}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        // --- STANDARD CAROUSEL UI ---
+                        <div className="flex-1 flex flex-col">
+                            <div className="bg-slate-800/50 p-4 rounded-lg mb-4 border border-slate-700/50 relative">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-xs uppercase font-bold text-primary-400 tracking-wider">{t.sparkPrompt} {promptIndex + 1}/{t.prompts.length}</span>
+                                    <button 
+                                        onClick={nextPrompt} 
+                                        className="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-2 py-1 rounded transition-colors"
+                                    >
+                                        {t.next} <ChevronRight size={12} />
+                                    </button>
+                                </div>
+                                <p className="text-slate-200 font-medium leading-relaxed min-h-[3rem]">
+                                "{t.prompts[promptIndex]}"
+                                </p>
+                            </div>
+
+                            <div className="mt-4 flex-1 flex flex-col">
+                                <p className="text-sm text-slate-500 mb-2">
+                                    {t.jotDown}
+                                </p>
+                                <textarea 
+                                    value={discoveryReflection}
+                                    onChange={(e) => setDiscoveryReflection(e.target.value)}
+                                    className="w-full flex-1 bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
+                                />
+                                <button 
+                                    onClick={handleSingleDiscoverySubmit}
+                                    disabled={isDiscovering || !discoveryReflection}
+                                    className="bg-slate-800 hover:bg-slate-700 text-primary-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 w-full justify-center border border-slate-700"
+                                >
+                                    {isDiscovering ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
+                                    {t.analyzeSuggest}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
@@ -396,9 +683,9 @@ export default function App() {
              </button>
         </div>
       </div>
-  );
-
-  const Phase1View = () => (
+    );
+  };
+  const renderPhase1View = () => (
     <div className="space-y-8 max-w-3xl">
       <header className="border-b border-slate-800 pb-4">
         <h2 className="text-2xl font-bold text-white mb-2">{t.phase1Title}</h2>
@@ -501,8 +788,14 @@ export default function App() {
       </div>
     </div>
   );
+  const renderPhase2View = () => {
+    // Gather candidate anchors from Phase 1 strengths and story patterns
+    const candidateAnchors = Array.from(new Set([
+        ...userData.assessmentStrengths.filter(s => s && s.length > 0),
+        ...userData.externalStories.map(s => s.pattern).filter(p => p && p.length > 0)
+    ]));
 
-  const Phase2View = () => (
+    return (
     <div className="space-y-8">
       <header className="border-b border-slate-800 pb-4">
         <h2 className="text-2xl font-bold text-white mb-2">{t.phase2Title}</h2>
@@ -533,15 +826,46 @@ export default function App() {
       {/* Directional Intention */}
       <section className="bg-gradient-to-br from-slate-900 to-indigo-900/30 p-6 rounded-xl border border-slate-700">
            <h3 className="text-lg font-semibold text-white mb-2">{t.directionalIntention}</h3>
-           <label className="block text-sm text-primary-300 mb-1">{t.yearlyThemeLabel}</label>
-           <p className="text-xs text-slate-400 mb-3">{t.yearlyThemeHelp}</p>
-           <input 
-              type="text"
-              value={userData.yearlyTheme || ''}
-              onChange={(e) => setUserData({...userData, yearlyTheme: e.target.value})}
-              className="w-full bg-slate-900 border border-slate-600 text-white rounded p-3 focus:ring-2 focus:ring-primary-500 font-medium text-lg"
-              placeholder="e.g., Deepening Expertise, Building Community..."
-           />
+           
+           <div className="flex flex-col md:flex-row gap-6 mb-4">
+               {/* Phase 1 Bridge */}
+               <div className="md:w-1/3 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                   <h4 className="text-xs uppercase font-bold text-slate-500 mb-2">{t.phase1Insight}</h4>
+                   <div className="flex flex-wrap gap-2">
+                       {userData.assessmentStrengths.filter(Boolean).length > 0 ? (
+                           userData.assessmentStrengths.filter(Boolean).map(s => (
+                               <span key={s} className="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">{s}</span>
+                           ))
+                       ) : (
+                           <span className="text-xs text-slate-500 italic">No Phase 1 strengths found.</span>
+                       )}
+                   </div>
+               </div>
+               
+               {/* Input Area */}
+               <div className="md:w-2/3">
+                   <label className="block text-sm text-primary-300 mb-1">{t.yearlyThemeLabel}</label>
+                   <p className="text-xs text-slate-400 mb-3">{t.yearlyThemeHelp}</p>
+                   
+                   <div className="flex gap-2">
+                       <input 
+                          type="text"
+                          value={userData.yearlyTheme || ''}
+                          onChange={(e) => setUserData({...userData, yearlyTheme: e.target.value})}
+                          className="flex-1 bg-slate-900 border border-slate-600 text-white rounded p-3 focus:ring-2 focus:ring-primary-500 font-medium text-lg"
+                          placeholder="e.g., Deepening Expertise, Building Community..."
+                       />
+                       <button
+                         onClick={handleSuggestTheme}
+                         disabled={isSuggestingTheme}
+                         className="bg-primary-600/20 hover:bg-primary-600/40 text-primary-400 px-4 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+                         title={t.suggestTheme}
+                       >
+                           {isSuggestingTheme ? <Loader2 className="animate-spin" size={20}/> : <Sparkles size={20} />}
+                       </button>
+                   </div>
+               </div>
+           </div>
       </section>
 
       {/* Story Deconstruction */}
@@ -613,7 +937,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Boundary Check */}
+      {/* Boundary Check - BRIDGED */}
       <section className="bg-slate-900 p-8 rounded-xl border border-slate-800">
         <h3 className="text-lg font-semibold text-red-400 mb-2 flex items-center gap-2">
             <BatteryWarning size={20} />
@@ -622,21 +946,18 @@ export default function App() {
         <p className="text-slate-400 mb-6 max-w-2xl">{t.boundaryCheckIntro}</p>
 
         <div className="grid md:grid-cols-2 gap-8">
-            {/* Drain Column */}
-            <div className="bg-slate-800/50 p-6 rounded-lg border border-red-500/20">
+            {/* Context from Phase 1 */}
+            <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
+                <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center gap-2">
+                    <Info size={16} /> {t.phase1Insight}
+                </label>
+                <div className="bg-slate-900 p-4 rounded text-sm text-slate-400 italic mb-4 min-h-[4rem]">
+                    "{userData.internalAudit.draining || "No drain identified in Phase 1"}"
+                </div>
+                
                 <label className="block text-sm font-semibold text-red-300 mb-2 flex items-center gap-2">
                     <AlertCircle size={16} /> {t.drainingPattern}
                 </label>
-                <div className="mb-4">
-                     <p className="text-xs text-slate-400 mb-2 font-medium uppercase">Reflection Triggers:</p>
-                     <ul className="space-y-1">
-                         {t.drainPrompts.map((p, i) => (
-                             <li key={i} className="text-xs text-slate-400 flex items-start gap-1">
-                                 <span className="text-red-500/50">•</span> {p}
-                             </li>
-                         ))}
-                     </ul>
-                </div>
                 <textarea 
                     value={userData.drainingPatterns[0] || ''}
                     onChange={(e) => {
@@ -650,7 +971,7 @@ export default function App() {
             </div>
             
             {/* Reframe Column */}
-            <div className="bg-slate-800/50 p-6 rounded-lg border border-green-500/20">
+            <div className="bg-slate-800/50 p-6 rounded-lg border border-green-500/20 flex flex-col">
                 <label className="block text-sm font-semibold text-green-300 mb-2 flex items-center gap-2">
                     <ShieldCheck size={16} /> {t.reframedBoundary}
                 </label>
@@ -673,7 +994,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Final Anchors */}
+      {/* Final Anchors - SYNTHESIS BOARD */}
       <section className="bg-gradient-to-r from-slate-900 to-slate-850 p-8 rounded-xl border border-primary-500/30">
         <h3 className="text-lg font-semibold text-primary-400 mb-2 flex items-center gap-2">
             <Anchor size={20} />
@@ -691,21 +1012,45 @@ export default function App() {
              </p>
         </div>
 
-        <p className="text-sm text-slate-400 mb-6">{t.finalAnchorsDesc}</p>
-        
-        <div className="grid gap-3">
-          {userData.coreAnchors.map((anchor, idx) => (
-            <div key={idx} className="flex items-center gap-3">
-               <span className="text-slate-500 font-mono text-sm w-6">0{idx + 1}</span>
-               <input
-                type="text"
-                value={anchor}
-                onChange={(e) => updateAnchor(idx, e.target.value)}
-                placeholder={`Core Anchor #${idx + 1}`}
-                className="flex-1 bg-slate-800 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none font-semibold"
-              />
+        <div className="grid md:grid-cols-2 gap-8">
+            {/* Left: Candidates */}
+            <div>
+                 <h4 className="text-xs uppercase font-bold text-slate-500 mb-2">{t.candidateAnchors}</h4>
+                 <p className="text-xs text-slate-500 mb-4">{t.candidateAnchorsHelp}</p>
+                 <div className="flex flex-wrap gap-2">
+                     {candidateAnchors.map((cand, i) => (
+                         <button
+                            key={i}
+                            onClick={() => selectCandidateToAnchor(cand || '')}
+                            className="bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-primary-500 text-sm px-3 py-2 rounded-lg transition-colors text-left"
+                         >
+                             {cand}
+                         </button>
+                     ))}
+                     {candidateAnchors.length === 0 && <span className="text-slate-600 text-sm italic">No patterns found yet.</span>}
+                 </div>
             </div>
-          ))}
+
+            {/* Right: Core Anchors Inputs */}
+            <div className="space-y-3">
+                 {userData.coreAnchors.map((anchor, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                       <span className="text-slate-500 font-mono text-sm w-6">0{idx + 1}</span>
+                       <input
+                        type="text"
+                        value={anchor}
+                        onChange={(e) => updateAnchor(idx, e.target.value)}
+                        placeholder={`Core Anchor #${idx + 1}`}
+                        className="flex-1 bg-slate-800 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none font-semibold"
+                      />
+                      {anchor && (
+                          <button onClick={() => updateAnchor(idx, '')} className="text-slate-600 hover:text-red-400">
+                              <X size={16} />
+                          </button>
+                      )}
+                    </div>
+                  ))}
+            </div>
         </div>
       </section>
 
@@ -719,8 +1064,8 @@ export default function App() {
       </div>
     </div>
   );
-
-  const Phase3View = () => (
+  };
+  const renderPhase3View = () => (
     <div className="space-y-8">
       <header className="border-b border-slate-800 pb-4">
         <h2 className="text-2xl font-bold text-white mb-2">{t.phase3Title}</h2>
@@ -816,47 +1161,13 @@ export default function App() {
       </div>
     </div>
   );
-
-  const DashboardView = () => {
+  const renderDashboardView = () => {
     // Process data for the momentum chart
     const data = userData.dailyLogs.slice(0, 14).reverse().map(log => ({
         name: new Date(log.date).toLocaleDateString(undefined, {weekday: 'short'}),
         energy: log.energyLevel || 3,
         anchor: log.anchorUsed
     }));
-
-    const [todayLog, setTodayLog] = useState({
-        anchor: '',
-        reflection: '',
-        energy: 3
-    });
-    
-    const [isLogging, setIsLogging] = useState(false);
-    const [lastSpark, setLastSpark] = useState<string | null>(null);
-
-    const handleLogSubmit = async () => {
-        if(!todayLog.anchor || !todayLog.reflection) return;
-        setIsLogging(true);
-        
-        // AI Feedback Loop: Get a Spark
-        let spark = "";
-        try {
-            spark = await generateDailySpark(todayLog.anchor, todayLog.reflection, language);
-            setLastSpark(spark);
-        } catch(e) {}
-
-        addDailyLog({
-            id: crypto.randomUUID(),
-            date: new Date().toISOString(),
-            anchorUsed: todayLog.anchor,
-            reflection: todayLog.reflection,
-            energyLevel: todayLog.energy,
-            aiFeedback: spark
-        });
-        
-        setTodayLog({ anchor: '', reflection: '', energy: 3 });
-        setIsLogging(false);
-    };
 
     return (
         <div className="space-y-8">
@@ -1007,43 +1318,109 @@ export default function App() {
         </div>
     );
   };
+  const renderWeeklyView = () => {
+    // 1. Calculate Weekly Stats
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    // Get recent logs for this week
+    const recentLogs = userData.dailyLogs.filter(l => new Date(l.date) > sevenDaysAgo).reverse(); // Reverse to chronological for chart
 
-  const WeeklyView = () => {
-    const [weeklyData, setWeeklyData] = useState({
-        wins: '',
-        challenges: '',
-        theme: '',
-        focus: ''
+    // Calculate Stats
+    const totalLogs = recentLogs.length;
+    const avgEnergy = totalLogs > 0 
+        ? (recentLogs.reduce((acc, l) => acc + l.energyLevel, 0) / totalLogs).toFixed(1)
+        : "0";
+    
+    // Find Top Anchor
+    const anchorCounts: Record<string, number> = {};
+    recentLogs.forEach(l => {
+        anchorCounts[l.anchorUsed] = (anchorCounts[l.anchorUsed] || 0) + 1;
     });
-    const [isSummarizing, setIsSummarizing] = useState(false);
+    const topAnchor = Object.entries(anchorCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || "N/A";
 
-    const handleAutoDraft = async () => {
-        setIsSummarizing(true);
-        try {
-            const summary = await summarizeWeek(userData.dailyLogs.slice(0, 7), language);
-            setWeeklyData(prev => ({
-                ...prev,
-                wins: summary.wins || '',
-                challenges: summary.challenges || '',
-                theme: summary.theme || ''
-            }));
-        } catch(e) {
-            showNotification("Could not auto-draft. Try again.");
-        } finally {
-            setIsSummarizing(false);
-        }
-    };
+    // Chart Data
+    const chartData = recentLogs.map(l => ({
+        day: new Date(l.date).toLocaleDateString(undefined, {weekday: 'short'}),
+        energy: l.energyLevel
+    }));
 
     return (
-      <div className="max-w-3xl mx-auto text-center py-12 animate-fade-in">
-          <div className="flex justify-center mb-4">
-               <div className="bg-slate-800 p-4 rounded-full">
-                   <Calendar size={40} className="text-primary-500" />
+      <div className="max-w-4xl mx-auto py-8 animate-fade-in">
+          <div className="text-center mb-8">
+              <div className="flex justify-center mb-4">
+                  <div className="bg-slate-800 p-3 rounded-full">
+                      <Calendar size={32} className="text-primary-500" />
+                  </div>
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">{t.weeklyTitle}</h2>
+          </div>
+
+          {/* WEEKLY CONTEXT DASHBOARD */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                   <Activity size={120} className="text-primary-500" />
+               </div>
+
+               <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                   <Activity size={20} className="text-primary-400" /> 
+                   {t.weeklyContext}
+               </h3>
+               <p className="text-sm text-slate-500 mb-6">{t.weeklyContextDesc}</p>
+
+               <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-3 gap-4">
+                         <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center flex flex-col justify-center">
+                             <div className="text-2xl font-bold text-white">{totalLogs}</div>
+                             <div className="text-[10px] text-slate-500 uppercase font-bold">{t.totalEntries}</div>
+                         </div>
+                         <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center flex flex-col justify-center">
+                             <div className="text-2xl font-bold text-primary-400">{avgEnergy}</div>
+                             <div className="text-[10px] text-slate-500 uppercase font-bold">{t.avgEnergy}</div>
+                         </div>
+                         <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center flex flex-col justify-center">
+                             <div className="text-sm font-bold text-white truncate px-1">{topAnchor}</div>
+                             <div className="text-[10px] text-slate-500 uppercase font-bold">{t.topAnchor}</div>
+                         </div>
+                    </div>
+
+                    {/* Mini Energy Chart */}
+                    <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 h-24">
+                         {chartData.length > 0 ? (
+                             <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData}>
+                                    <Line type="monotone" dataKey="energy" stroke="#6366f1" strokeWidth={2} dot={{r: 2}} />
+                                    <XAxis dataKey="day" hide />
+                                </LineChart>
+                            </ResponsiveContainer>
+                         ) : (
+                             <div className="flex items-center justify-center h-full text-xs text-slate-500 italic">No data yet</div>
+                         )}
+                    </div>
+               </div>
+
+               {/* Key Moments Scrollable List */}
+               <h4 className="text-xs uppercase font-bold text-slate-500 mb-2">{t.keyMoments}</h4>
+               <div className="bg-slate-800/50 rounded-lg border border-slate-700 max-h-48 overflow-y-auto custom-scrollbar">
+                   {recentLogs.length > 0 ? recentLogs.map((log, i) => (
+                       <div key={i} className="p-3 border-b border-slate-700/50 last:border-0 text-sm">
+                           <div className="flex justify-between mb-1">
+                               <span className="text-primary-400 font-medium">{log.anchorUsed}</span>
+                               <span className="text-slate-500 text-xs">{new Date(log.date).toLocaleDateString()}</span>
+                           </div>
+                           <p className="text-slate-300 mb-1">{log.reflection}</p>
+                           {log.aiFeedback && <p className="text-xs text-slate-500 italic border-l-2 border-primary-500/30 pl-2">"{log.aiFeedback}"</p>}
+                       </div>
+                   )) : (
+                       <div className="p-4 text-center text-slate-500 text-sm italic">
+                           No logs recorded this week. 
+                       </div>
+                   )}
                </div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">{t.weeklyTitle}</h2>
           
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-left space-y-6 mt-8 relative">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-left space-y-6 relative">
                 
                {/* Auto-Draft Button */}
                <div className="absolute top-6 right-6">
@@ -1095,14 +1472,73 @@ export default function App() {
       </div>
     );
   };
-
   // Updated Quarterly View based on PDF Page 12
-  const QuarterlyView = () => (
-     <div className="max-w-3xl mx-auto text-center py-12 animate-fade-in">
-          <TrendingUp size={48} className="mx-auto text-green-500 mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">{t.quarterlyTitle}</h2>
-          <p className="text-slate-400 mb-8">{t.quarterlyDesc}</p>
+  const renderQuarterlyView = () => {
+    // 1. Calculate Stats for the "Quarterly Rewind"
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    
+    const recentLogs = userData.dailyLogs.filter(l => new Date(l.date) > ninetyDaysAgo);
+    
+    const logCount = recentLogs.length;
+    const avgEnergy = logCount > 0 
+        ? (recentLogs.reduce((acc, l) => acc + l.energyLevel, 0) / logCount).toFixed(1) 
+        : "0";
+    
+    // Calculate Top Anchor
+    const anchorCounts: Record<string, number> = {};
+    recentLogs.forEach(l => {
+        anchorCounts[l.anchorUsed] = (anchorCounts[l.anchorUsed] || 0) + 1;
+    });
+    const topAnchor = Object.entries(anchorCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+    return (
+     <div className="max-w-4xl mx-auto py-8 animate-fade-in">
+          <div className="text-center mb-10">
+              <TrendingUp size={48} className="mx-auto text-green-500 mb-4" />
+              <h2 className="text-3xl font-bold text-white mb-2">{t.quarterlyTitle}</h2>
+              <p className="text-slate-400 max-w-xl mx-auto">{t.quarterlyDesc}</p>
+          </div>
           
+          {/* QUARTERLY REWIND PANEL */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-8 relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <History size={100} className="text-primary-500" />
+               </div>
+               
+               <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                   <History size={20} className="text-primary-400" /> 
+                   {t.quarterlyRewind}
+               </h3>
+               <p className="text-sm text-slate-500 mb-6">{t.rewindIntro}</p>
+
+               <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 text-center">
+                        <div className="text-2xl font-bold text-white">{logCount}</div>
+                        <div className="text-xs text-slate-500 uppercase font-semibold">{t.totalLogs}</div>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 text-center">
+                        <div className="text-2xl font-bold text-primary-400">{avgEnergy}</div>
+                        <div className="text-xs text-slate-500 uppercase font-semibold">{t.avgEnergy}</div>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 text-center">
+                        <div className="text-lg font-bold text-white truncate px-1">{topAnchor}</div>
+                        <div className="text-xs text-slate-500 uppercase font-semibold">{t.topAnchor}</div>
+                    </div>
+               </div>
+
+               {/* Recent Context List */}
+               <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                   {userData.weeklyReflections.slice(0, 5).map((w, i) => (
+                       <div key={i} className="text-xs text-slate-400 border-l-2 border-slate-700 pl-3 py-1">
+                           <span className="text-slate-500 block mb-0.5">{new Date(w.date).toLocaleDateString()}</span>
+                           <span className="text-slate-300">"{w.focusForNextWeek}"</span>
+                       </div>
+                   ))}
+                   {userData.weeklyReflections.length === 0 && <p className="text-xs text-slate-600 italic">No weekly reflections found.</p>}
+               </div>
+          </div>
+
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-left space-y-8">
                
                <div className="grid md:grid-cols-2 gap-8">
@@ -1146,25 +1582,71 @@ export default function App() {
 
                <div className="flex justify-end pt-4 border-t border-slate-800">
                     <button 
-                        onClick={saveQuarterly} 
-                        className="bg-primary-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-500 transition-colors flex items-center gap-2"
+                        onClick={saveAndAnalyzeQuarterly} 
+                        disabled={isAnalyzingQuarter}
+                        className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-500 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
-                        <Save size={18} /> {t.saveQuarterly}
+                        {isAnalyzingQuarter ? <Loader2 className="animate-spin" size={18}/> : <Sparkles size={18} />}
+                        {isAnalyzingQuarter ? t.analyzing : t.saveAndAnalyze}
                     </button>
                </div>
           </div>
+          
+          {/* AI ANALYSIS RESULTS */}
+          {latestQuarterlyAnalysis && (
+              <div className="mt-8 bg-gradient-to-br from-indigo-900 to-slate-900 border border-indigo-500/50 rounded-xl p-8 animate-fade-in shadow-2xl">
+                   <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                       <Sparkles className="text-yellow-400" /> {t.strategicOutlook}
+                   </h3>
+                   
+                   <div className="space-y-6">
+                       <div>
+                           <h4 className="text-xs uppercase font-bold text-indigo-300 mb-2">{t.themesObserved}</h4>
+                           <ul className="space-y-2">
+                               {latestQuarterlyAnalysis.themes.map((theme, i) => (
+                                   <li key={i} className="flex items-start gap-2 text-slate-200 text-sm">
+                                       <span className="text-indigo-400 mt-1">•</span> {theme}
+                                   </li>
+                               ))}
+                           </ul>
+                       </div>
+                       
+                       <div>
+                           <h4 className="text-xs uppercase font-bold text-green-400 mb-2">{t.growthTrajectory}</h4>
+                           <p className="text-slate-200 text-sm leading-relaxed border-l-2 border-green-500/50 pl-4">
+                               {latestQuarterlyAnalysis.growthTrajectory}
+                           </p>
+                       </div>
 
-          <div className="mt-8 text-left">
+                       <div>
+                           <h4 className="text-xs uppercase font-bold text-yellow-400 mb-2">{t.nextQuarterFocus}</h4>
+                           <div className="bg-slate-800/50 p-4 rounded-lg border border-yellow-500/30 text-white font-medium text-lg">
+                               {latestQuarterlyAnalysis.nextQuarterFocus}
+                           </div>
+                       </div>
+                   </div>
+              </div>
+          )}
+
+          <div className="mt-12 text-left">
               <h3 className="text-lg font-semibold text-white mb-4">Past Check-Ins</h3>
               {userData.quarterlyCheckIns.length > 0 ? (
                   <div className="space-y-4">
                       {userData.quarterlyCheckIns.map(q => (
-                          <div key={q.id} className="bg-slate-900 border border-slate-800 p-4 rounded-lg">
-                              <div className="text-xs text-slate-500 mb-2">{new Date(q.date).toLocaleDateString()}</div>
+                          <div key={q.id} className="bg-slate-900 border border-slate-800 p-4 rounded-lg hover:border-slate-600 transition-colors">
+                              <div className="flex justify-between items-start mb-2">
+                                  <div className="text-xs text-slate-500">{new Date(q.date).toLocaleDateString()}</div>
+                                  {q.aiAnalysis && <span className="bg-indigo-900/50 text-indigo-300 text-[10px] px-2 py-0.5 rounded border border-indigo-500/30">Analyzed</span>}
+                              </div>
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                   <div><span className="text-primary-400">Shifted:</span> <span className="text-slate-300">{q.shifted}</span></div>
                                   <div><span className="text-primary-400">Flow:</span> <span className="text-slate-300">{q.creatingFlow}</span></div>
                               </div>
+                              {q.aiAnalysis && (
+                                  <div className="mt-3 pt-3 border-t border-slate-800">
+                                      <p className="text-xs text-yellow-500 font-medium">Focus: {q.aiAnalysis.nextQuarterFocus}</p>
+                                  </div>
+                              )}
                           </div>
                       ))}
                   </div>
@@ -1172,20 +1654,20 @@ export default function App() {
                   <p className="text-slate-500 italic">No past check-ins recorded.</p>
               )}
           </div>
-      </div>
+     </div>
   );
-
+  };
 
   return (
     <Layout currentView={view} setView={setView} language={language} setLanguage={setLanguage}>
-      {view === 'welcome' && <WelcomeView />}
-      {view === 'discovery' && <DiscoveryView />}
-      {view === 'phase1' && <Phase1View />}
-      {view === 'phase2' && <Phase2View />}
-      {view === 'phase3' && <Phase3View />}
-      {view === 'dashboard' && <DashboardView />}
-      {view === 'weekly' && <WeeklyView />}
-      {view === 'quarterly' && <QuarterlyView />}
+      {view === 'welcome' && renderWelcomeView()}
+      {view === 'discovery' && renderDiscoveryView()}
+      {view === 'phase1' && renderPhase1View()}
+      {view === 'phase2' && renderPhase2View()}
+      {view === 'phase3' && renderPhase3View()}
+      {view === 'dashboard' && renderDashboardView()}
+      {view === 'weekly' && renderWeeklyView()}
+      {view === 'quarterly' && renderQuarterlyView()}
 
       {/* Floating Notification */}
       {notification && (

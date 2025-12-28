@@ -1,3 +1,4 @@
+
 export type ViewState = 'welcome' | 'discovery' | 'phase1' | 'phase2' | 'phase3' | 'dashboard' | 'weekly' | 'quarterly';
 export type Language = 'en-GB' | 'zh-HK';
 
@@ -43,6 +44,11 @@ export interface QuarterlyCheckIn {
   creatingFlow: string; // What's creating flow?
   needsAdjustment: string; // What needs adjustment?
   emerging: string; // What's emerging?
+  aiAnalysis?: {
+    themes: string[];
+    growthTrajectory: string;
+    nextQuarterFocus: string;
+  };
 }
 
 export interface InternalAudit {
@@ -53,6 +59,7 @@ export interface InternalAudit {
 export interface UserData {
   name: string;
   email: string;
+  useBNODeck: boolean; // New: Toggle for HK BNO specific cards
   yearlyTheme: string; // "One focused area or theme" (Page 6)
   internalAudit: InternalAudit; // Phase 1: Weigh
   assessmentStrengths: string[]; // Phase 1: Hypotheses
@@ -69,6 +76,7 @@ export interface UserData {
 export const INITIAL_USER_DATA: UserData = {
   name: '',
   email: '',
+  useBNODeck: false,
   yearlyTheme: '',
   internalAudit: { momentum: '', draining: '' },
   assessmentStrengths: ['', '', '', '', ''],

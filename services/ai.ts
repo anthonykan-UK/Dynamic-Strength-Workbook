@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse, Schema } from "@google/genai";
-import { UserData, Language, DailyLog } from "../types";
+import { UserData, Language, DailyLog, WeeklyReflection, QuarterlyCheckIn } from "../types";
 
 // Initialize the client strictly with the environment variable
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -142,8 +142,6 @@ export const summarizeWeek = async (logs: DailyLog[], language: Language) => {
     }
 };
 
-// ... (Existing analyzeStoryWithAI, suggestShiftsWithAI, discoverStrengthsWithAI remain) ...
-
 export const analyzeStoryWithAI = async (storyText: string, language: Language) => {
   const langPrompt = language === 'zh-HK' 
     ? "Output the values in Traditional Chinese (Hong Kong)." 
@@ -215,16 +213,22 @@ export const suggestShiftsWithAI = async (territory: string, anchor: string, lan
   }
 };
 
-export const discoverStrengthsWithAI = async (reflection: string, language: Language) => {
+export const discoverStrengthsWithAI = async (reflection: string, language: Language, contextQuestion?: string) => {
   const langPrompt = language === 'zh-HK' 
     ? "Output strengths in Traditional Chinese (Hong Kong)." 
     : "Output strengths in British English.";
 
+  const contextPrompt = contextQuestion 
+    ? `The user is answering the specific reflective question: "${contextQuestion}". 
+       Identify strengths particularly relevant to this context (e.g. migration resilience, family dynamics, cultural adaptation, future planning).`
+    : "Identify general strength themes.";
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Analyze the following user notes, which may describe multiple different situations (work, personal life, challenges, wins). 
-      Look for recurring patterns, underlying talents, or distinct capabilities across these stories. 
+      contents: `Analyze the following user reflection. 
+      ${contextPrompt}
+      Look for recurring patterns, underlying talents, or distinct capabilities. 
       Identify the top 5 likely strength themes (single words or short phrases) that appear to be driving their success or flow state.
       ${langPrompt}
       
@@ -250,3 +254,135 @@ export const discoverStrengthsWithAI = async (reflection: string, language: Lang
     throw error;
   }
 };
+
+export interface JourneyEntry {
+  stage: string;
+  question: string;
+  answer: string;
+}
+
+export const analyzeJourneyWithAI = async (journey: JourneyEntry[], language: Language) => {
+  const langPrompt = language === 'zh-HK' 
+    ? "Output strengths in Traditional Chinese (Hong Kong)." 
+    : "Output strengths in British English.";
+
+  const transcript = journey.map(j => `[Stage: ${j.stage}] Q: ${j.question} \n A: ${j.answer}`).join('\n\n');
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Analyze this user's chronological migration journey (Roots -> Transition -> Growth).
+      
+      Look for the "Trajectory of Strength":
+      1. What strengths anchored them in the past (Roots)?
+      2. What adaptable strengths emerged during the move (Transition)?
+      3. What aspirational strengths are they building for the future (Growth)?
+      
+      Synthesize this entire arc into the top 5 Core Strength Hypotheses that seem to be the most enduring and vital for them right now.
+      
+      Journey Transcript:
+      ${transcript}
+      
+      ${langPrompt}`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT" as any,
+          properties: {
+            strengths: {
+              type: "ARRAY" as any,
+              items: { type: "STRING" as any }
+            }
+          }
+        }
+      }
+    });
+    
+    const data = JSON.parse(response.text || "{}");
+    return data.strengths || [];
+  } catch (error) {
+    console.error("Journey Analysis Error:", error);
+    throw error;
+  }
+};
+
+export const suggestThemeWithAI = async (strengths: string[], language: Language) => {
+    const langPrompt = language === 'zh-HK' 
+      ? "Suggest in Traditional Chinese (Hong Kong)." 
+      : "Suggest in British English.";
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: `The user has identified these top 5 strengths: ${strengths.join(', ')}.
+            
+            Based on this combination, suggest a "Yearly Theme" or "Directional Intention".
+            This should be a short, inspiring phrase (3-6 words) that captures the essence of how they can apply these strengths to grow.
+            Examples: "Building Community with Empathy", "Strategic Growth through Learning", "Anchoring in Calmness".
+            
+            ${langPrompt}`,
+            config: {
+                responseMimeType: "text/plain",
+            }
+        });
+        return response.text?.trim() || "";
+    } catch (e) {
+        console.error("Theme Suggestion Error", e);
+        throw e;
+    }
+}
+
+export const analyzeQuarterlyCheckIn = async (
+    checkIn: QuarterlyCheckIn, 
+    logs: DailyLog[], 
+    weeklies: WeeklyReflection[], 
+    language: Language
+) => {
+    const langPrompt = language === 'zh-HK' 
+      ? "Output in Traditional Chinese (Hong Kong)." 
+      : "Output in British English.";
+
+    // Summarize logs for context
+    const logSummary = logs.map(l => `[${l.date}] Anchor: ${l.anchorUsed}, Energy: ${l.energyLevel}, Note: ${l.reflection}`).join('\n');
+    const weeklySummary = weeklies.map(w => `[${w.date}] Wins: ${w.wins}, Challenges: ${w.challenges}`).join('\n');
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: `Act as a Strategic Life Coach. Analyze this user's Quarterly Check-In along with their data from the last 3 months.
+            
+            USER DATA (Last 3 Months):
+            Daily Logs (Sample): ${logSummary.substring(0, 2000)}...
+            Weekly Reflections: ${weeklySummary}
+            
+            CURRENT QUARTERLY CHECK-IN:
+            1. What Shifted: ${checkIn.shifted}
+            2. Creating Flow: ${checkIn.creatingFlow}
+            3. Needs Adjustment: ${checkIn.needsAdjustment}
+            4. Emerging: ${checkIn.emerging}
+            
+            Generate a Strategic Outlook for the NEXT Quarter containing:
+            1. "Themes Observed": 3 bullet points on the patterns you see in their data + reflection.
+            2. "Growth Trajectory": A short paragraph describing where they are heading (Stalling? Accelerating? Pivoting?).
+            3. "Next Quarter Focus": One clear, actionable directive or intention for the next 3 months.
+            
+            ${langPrompt}`,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT" as any,
+                    properties: {
+                        themes: { type: "ARRAY" as any, items: { type: "STRING" as any } },
+                        growthTrajectory: { type: "STRING" as any },
+                        nextQuarterFocus: { type: "STRING" as any }
+                    }
+                }
+            }
+        });
+        
+        return JSON.parse(response.text || "{}");
+    } catch (error) {
+        console.error("Quarterly Analysis Error", error);
+        throw error;
+    }
+}
