@@ -76,6 +76,9 @@ export const TRANSLATIONS = {
     addStory: "Add Evidence",
     askPeople: "Ask 3-5 people: \"When have you seen me at my best?\" Record verbatim.",
     saveContinuePhase2: "Continue to Phase 2: Venture",
+    strengthPlaceholder: "Strength #",
+    storyPlaceholder: "\"You were amazing when you...\"",
+    noStoriesYet: "No stories added yet. Click \"Add Evidence\" to begin.",
 
     // Phase 2: Venture
     phase2Title: "Phase 2: Venture",
@@ -124,6 +127,18 @@ export const TRANSLATIONS = {
         def: "How much complexity/uncertainty you can hold before effectiveness drops."
       }
     ],
+    // UI Helpers Phase 2
+    noPhase1Strengths: "No Phase 1 strengths found.",
+    themePlaceholder: "e.g., Deepening Expertise, Building Community...",
+    phase1StoriesReq: "Please add stories in Phase 1 first.",
+    yes: "Yes",
+    no: "No",
+    mostly: "Mostly",
+    noDrainIdentified: "No drain identified in Phase 1",
+    boundaryDescription: "Set a boundary that protects your capacity. It doesn't mean stopping work, but changing <i>how</i> you engage.",
+    whatIsAnchor: "What is an Anchor?",
+    noPatternsFound: "No patterns found yet.",
+    anchorPlaceholder: "Core Anchor #",
 
     // Phase 3: Scale
     phase3Title: "Phase 3: Evaluate & Scale",
@@ -155,6 +170,7 @@ export const TRANSLATIONS = {
     energyHigh: "Energized",
     strengthSpark: "Strength Echo",
     sparkSubtitle: "Your personal feedback loop.",
+    noActiveShifts: "No active shifts defined.",
     
     // Weekly
     weeklyTitle: "Weekly Reflection",
@@ -167,6 +183,9 @@ export const TRANSLATIONS = {
     challengesLabel: "Adjustments Needed",
     themeLabel: "Theme of the Week",
     weeklySaved: "Weekly reflection saved!",
+    noDataYet: "No data yet",
+    noLogsThisWeek: "No logs recorded this week.",
+    weeklyThemePlaceholder: "e.g. The Week of Persistence",
     
     // Quarterly
     quarterlyTitle: "Quarterly Check-In",
@@ -192,6 +211,10 @@ export const TRANSLATIONS = {
     q_emerging: "4. What's emerging?",
     q_emerging_help: "Unexpected opportunities or new capabilities becoming visible?",
     saveQuarterly: "Save Check-In",
+    noWeeklyReflections: "No weekly reflections found.",
+    pastCheckIns: "Past Check-Ins",
+    analyzedTag: "Analyzed",
+    noPastCheckIns: "No past check-ins recorded.",
 
     // Prompts
     drainPrompts: [
@@ -211,6 +234,32 @@ export const TRANSLATIONS = {
     coachWelcome: "Hi! I'm your Dynamic Strength Assistant. I follow the WAVES Cycle to help you build momentum. Where should we start?",
     coachError: "I'm having trouble connecting. Please try again later.",
     askGuidance: "Ask for guidance on the WAVES cycle...",
+    
+    // Help & Guide
+    helpTitle: "Workbook Guide",
+    helpClose: "Close Guide",
+    helpTabs: {
+        start: "Getting Started",
+        phases: "The Workflow",
+        glossary: "Key Terms"
+    },
+    helpContent: {
+        start: [
+            "Welcome to the Dynamic Strength Workbook. This isn't just a reading app; it's a 'doing' app.",
+            "1. Start with the 'Strength Discovery' to uncover your baseline strengths.",
+            "2. Move through Phases 1, 2, and 3 sequentially. Each phase builds on the last.",
+            "3. Once you reach Phase 3, you unlock the 'Daily Routine' dashboard.",
+            "4. Your data is saved locally on this device. You can return anytime.",
+            "5. Stuck? Click the 'Strength Coach' icon (bottom right) for instant AI guidance."
+        ],
+        phases: [
+            { title: "Discovery", desc: "Identify hypotheses using AI or the Migration Arc questions." },
+            { title: "Phase 1: Weigh & Assess", desc: "Gather evidence from your past (Internal) and peers (External) to validate your strengths." },
+            { title: "Phase 2: Venture", desc: "Define your 'Directional Intention', set boundaries, and lock in your Core Anchors." },
+            { title: "Phase 3: Evaluate & Scale", desc: "Turn anchors into action. Design '5% Shift' practices for specific territories of life." },
+            { title: "Daily Routine", desc: "The engine room. Log your daily practice, track energy, and get AI feedback." }
+        ]
+    },
     
     // Notifications
     notifications: {
@@ -304,6 +353,9 @@ export const TRANSLATIONS = {
     addStory: "新增證據",
     askPeople: "詢問 3-5 人：「你何時見過我表現最好？」逐字記錄。",
     saveContinuePhase2: "繼續第二階段：探索",
+    strengthPlaceholder: "優勢 #",
+    storyPlaceholder: "「當你...的時候真的很棒」",
+    noStoriesYet: "尚未新增故事。點擊「新增證據」開始。",
 
     // Phase 2
     phase2Title: "第二階段：探索 (Venture)",
@@ -352,6 +404,18 @@ export const TRANSLATIONS = {
         def: "在效能下降之前，你能承受多少複雜性/不確定性。"
       }
     ],
+    // UI Helpers Phase 2
+    noPhase1Strengths: "未找到第一階段的優勢。",
+    themePlaceholder: "例如：深化專業、建立社群...",
+    phase1StoriesReq: "請先在第一階段新增故事。",
+    yes: "是",
+    no: "否",
+    mostly: "大部分",
+    noDrainIdentified: "第一階段未識別出消耗點",
+    boundaryDescription: "設定一個保護你能量的界線。這不代表停止工作，而是改變你<i>投入的方式</i>。",
+    whatIsAnchor: "什麼是錨點？",
+    noPatternsFound: "尚未發現模式。",
+    anchorPlaceholder: "核心錨點 #",
 
     // Phase 3
     phase3Title: "第三階段：評估與擴展",
@@ -383,6 +447,7 @@ export const TRANSLATIONS = {
     energyHigh: "充能",
     strengthSpark: "優勢回響",
     sparkSubtitle: "你的個人反饋循環。",
+    noActiveShifts: "未定義當前的練習。",
 
     // Weekly
     weeklyTitle: "每週反思",
@@ -395,6 +460,9 @@ export const TRANSLATIONS = {
     challengesLabel: "需要調整",
     themeLabel: "本週主題",
     weeklySaved: "每週反思已儲存！",
+    noDataYet: "尚無數據",
+    noLogsThisWeek: "本週無日誌記錄。",
+    weeklyThemePlaceholder: "例如：堅持的一週",
 
     // Quarterly
     quarterlyTitle: "季度檢視",
@@ -420,6 +488,10 @@ export const TRANSLATIONS = {
     q_emerging: "4. 什麼正在浮現？",
     q_emerging_help: "意想不到的機會或新能力變得可見？",
     saveQuarterly: "儲存檢視",
+    noWeeklyReflections: "未找到每週反思。",
+    pastCheckIns: "過往檢視",
+    analyzedTag: "已分析",
+    noPastCheckIns: "無過往檢視記錄。",
 
     // Prompts
     drainPrompts: [
@@ -434,12 +506,38 @@ export const TRANSLATIONS = {
       "想一個別人覺得難但你學得很快的任務。為什麼你這麼快上手？",
       "描述最近一次你廢寢忘食的經歷 (心流)。什麼活動讓你如此投入？"
     ],
-
+    
     // Coach
     coachWelcome: "你好！我是你的動態優勢助理。我遵循 WAVES 循環來協助你建立動力。我們從哪裡開始？",
     coachError: "我現在連接有點問題，請稍後再試。",
     askGuidance: "詢問關於 WAVES 循環的指引...",
     
+    // Help & Guide
+    helpTitle: "使用指南",
+    helpClose: "關閉指南",
+    helpTabs: {
+        start: "開始使用",
+        phases: "工作流程",
+        glossary: "關鍵術語"
+    },
+    helpContent: {
+        start: [
+            "歡迎來到動態優勢練習冊。這不只是一個閱讀工具，而是一個「實踐」工具。",
+            "1. 從「發掘優勢」開始，找出你的基線優勢。",
+            "2. 依序完成第一、二、三階段。每個階段都建立在前一個的基礎上。",
+            "3. 進入第三階段後，你將解鎖「每日日常」儀表板。",
+            "4. 你的數據會儲存在此設備上，你可以隨時返回。",
+            "5. 需要幫助？點擊右下角的「優勢教練」獲取即時的 AI 指引和範例。"
+        ],
+        phases: [
+            { title: "發掘優勢", desc: "使用 AI 或移民歷程問題識別假設。" },
+            { title: "第一階段：衡量與評估", desc: "收集過去（內在）和同儕（外在）的證據來驗證你的優勢。" },
+            { title: "第二階段：探索", desc: "定義你的「方向性意圖」，設定界線，並鎖定你的核心錨點。" },
+            { title: "第三階段：評估與擴展", desc: "將錨點轉化為行動。為生活的特定範疇設計「5% 微調」練習。" },
+            { title: "每日日常", desc: "引擎室。記錄你的每日練習、追蹤能量，並獲得 AI 反饋。" }
+        ]
+    },
+
     // Notifications
     notifications: {
       storyAnalyzed: "故事已分析！",

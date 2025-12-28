@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
+import { HelpGuide } from './HelpGuide';
 import { 
   BookOpen, 
   Target, 
@@ -11,7 +12,8 @@ import {
   Menu,
   X,
   Search,
-  Globe
+  Globe,
+  HelpCircle
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -24,7 +26,17 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, setLanguage, children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const t = TRANSLATIONS[language];
+
+  // Check for first-time visitor
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem('inkspire_tutorial_seen');
+    if (!hasSeenTutorial) {
+        setShowHelp(true);
+        localStorage.setItem('inkspire_tutorial_seen', 'true');
+    }
+  }, []);
 
   const NavItem = ({ view, icon: Icon, label }: { view: ViewState; icon: any; label: string }) => (
     <button
@@ -68,6 +80,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-200 overflow-hidden">
+      {/* Help Modal Overlay */}
+      {showHelp && <HelpGuide language={language} onClose={() => setShowHelp(false)} />}
+
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 border-r border-slate-800 bg-slate-900">
         <div className="p-6 border-b border-slate-800">
@@ -97,6 +112,17 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
           <NavItem view="weekly" icon={Calendar} label={t.weekly} />
           <NavItem view="quarterly" icon={BarChart} label={t.quarterly} />
         </nav>
+        
+        {/* Help Button */}
+        <div className="p-4 border-t border-slate-800">
+            <button 
+                onClick={() => setShowHelp(true)}
+                className="w-full flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-sm"
+            >
+                <HelpCircle size={18} />
+                {t.helpTitle}
+            </button>
+        </div>
       </aside>
 
       {/* Mobile Header */}
@@ -111,7 +137,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-slate-900 z-30 pt-20 px-4 space-y-2 md:hidden">
+        <div className="fixed inset-0 bg-slate-900 z-30 pt-20 px-4 space-y-2 md:hidden overflow-y-auto pb-8">
             <LanguageToggle />
             <NavItem view="welcome" icon={BookOpen} label={t.intro} />
             <NavItem view="discovery" icon={Search} label={t.discovery} />
@@ -121,6 +147,15 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
             <NavItem view="dashboard" icon={LayoutDashboard} label={t.dashboard} />
             <NavItem view="weekly" icon={Calendar} label={t.weekly} />
             <NavItem view="quarterly" icon={BarChart} label={t.quarterly} />
+            <div className="pt-4 mt-4 border-t border-slate-800">
+                <button 
+                    onClick={() => { setShowHelp(true); setMobileMenuOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-lg transition-colors text-sm font-medium"
+                >
+                    <HelpCircle size={18} />
+                    {t.helpTitle}
+                </button>
+            </div>
         </div>
       )}
 

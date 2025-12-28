@@ -737,7 +737,7 @@ export default function App() {
               type="text"
               value={str}
               onChange={(e) => updateAssessmentStrength(idx, e.target.value)}
-              placeholder={`Strength #${idx + 1}`}
+              placeholder={`${t.strengthPlaceholder}${idx + 1}`}
               className="bg-slate-800 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
             />
           ))}
@@ -792,7 +792,7 @@ export default function App() {
               <textarea
                 value={story.text}
                 onChange={(e) => updateStory(story.id, 'text', e.target.value)}
-                placeholder={`"You were amazing when you..."`}
+                placeholder={t.storyPlaceholder}
                 className="w-full h-24 bg-slate-800 border border-slate-700 text-white p-4 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none"
               />
               <button 
@@ -805,7 +805,7 @@ export default function App() {
           ))}
           {userData.externalStories.length === 0 && (
             <div className="text-center py-8 text-slate-600 border-2 border-dashed border-slate-800 rounded-lg">
-              No stories added yet. Click "Add Evidence" to begin.
+              {t.noStoriesYet}
             </div>
           )}
         </div>
@@ -870,7 +870,7 @@ export default function App() {
                                <span key={s} className="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">{s}</span>
                            ))
                        ) : (
-                           <span className="text-xs text-slate-500 italic">No Phase 1 strengths found.</span>
+                           <span className="text-xs text-slate-500 italic">{t.noPhase1Strengths}</span>
                        )}
                    </div>
                </div>
@@ -886,7 +886,7 @@ export default function App() {
                           value={userData.yearlyTheme || ''}
                           onChange={(e) => setUserData({...userData, yearlyTheme: e.target.value})}
                           className="flex-1 bg-slate-900 border border-slate-600 text-white rounded p-3 focus:ring-2 focus:ring-primary-500 font-medium text-lg"
-                          placeholder="e.g., Deepening Expertise, Building Community..."
+                          placeholder={t.themePlaceholder}
                        />
                        <button
                          onClick={handleSuggestTheme}
@@ -904,7 +904,7 @@ export default function App() {
       {/* Story Deconstruction */}
       <section className="space-y-6">
         <h3 className="text-xl font-semibold text-white">{t.deconstruct}</h3>
-        {userData.externalStories.length === 0 && <p className="text-yellow-500">Please add stories in Phase 1 first.</p>}
+        {userData.externalStories.length === 0 && <p className="text-yellow-500">{t.phase1StoriesReq}</p>}
         
         <div className="grid md:grid-cols-2 gap-6">
           {userData.externalStories.map((story, idx) => (
@@ -927,7 +927,7 @@ export default function App() {
               <div>
                 <label className="text-xs uppercase font-bold text-slate-500">{t.echoCheck}</label>
                 <div className="flex gap-2 mt-1">
-                  {['Yes', 'No', 'Mostly'].map(opt => (
+                  {[t.yes, t.no, t.mostly].map(opt => (
                     <button
                       key={opt}
                       onClick={() => updateStory(story.id, 'echoCheck', opt as any)}
@@ -985,7 +985,7 @@ export default function App() {
                     <Info size={16} /> {t.phase1Insight}
                 </label>
                 <div className="bg-slate-900 p-4 rounded text-sm text-slate-400 italic mb-4 min-h-[4rem]">
-                    "{userData.internalAudit.draining || "No drain identified in Phase 1"}"
+                    "{userData.internalAudit.draining || t.noDrainIdentified}"
                 </div>
                 
                 <label className="block text-sm font-semibold text-red-300 mb-2 flex items-center gap-2">
@@ -1009,9 +1009,7 @@ export default function App() {
                     <ShieldCheck size={16} /> {t.reframedBoundary}
                 </label>
                 <div className="mb-4">
-                     <p className="text-xs text-slate-400 mb-2">
-                        Set a boundary that protects your capacity. It doesn't mean stopping work, but changing <i>how</i> you engage.
-                     </p>
+                     <p className="text-xs text-slate-400 mb-2" dangerouslySetInnerHTML={{ __html: t.boundaryDescription }}></p>
                 </div>
                 <textarea 
                     value={userData.reframedBoundaries[0] || ''}
@@ -1036,7 +1034,7 @@ export default function App() {
         
         {/* Anchor Education Block */}
         <div className="bg-primary-900/20 border-l-4 border-primary-500 p-4 mb-6 rounded-r">
-             <h4 className="font-bold text-white text-sm mb-1">What is an Anchor?</h4>
+             <h4 className="font-bold text-white text-sm mb-1">{t.whatIsAnchor}</h4>
              <p className="text-sm text-slate-300 mb-2 leading-relaxed">
                  {t.anchorDefinition}
              </p>
@@ -1060,7 +1058,7 @@ export default function App() {
                              {cand}
                          </button>
                      ))}
-                     {candidateAnchors.length === 0 && <span className="text-slate-600 text-sm italic">No patterns found yet.</span>}
+                     {candidateAnchors.length === 0 && <span className="text-slate-600 text-sm italic">{t.noPatternsFound}</span>}
                  </div>
             </div>
 
@@ -1073,7 +1071,7 @@ export default function App() {
                         type="text"
                         value={anchor}
                         onChange={(e) => updateAnchor(idx, e.target.value)}
-                        placeholder={`Core Anchor #${idx + 1}`}
+                        placeholder={`${t.anchorPlaceholder}${idx + 1}`}
                         className="flex-1 bg-slate-800 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none font-semibold"
                       />
                       {anchor && (
@@ -1316,7 +1314,7 @@ export default function App() {
                                     <div className="text-slate-200">{shift.practice}</div>
                                     <div className="text-xs text-slate-500 mt-1">{shift.territory}</div>
                                 </div>
-                            )) : <div className="text-slate-500 text-sm">No active shifts defined.</div>}
+                            )) : <div className="text-slate-500 text-sm">{t.noActiveShifts}</div>}
                         </div>
                     </div>
                 </div>
@@ -1428,7 +1426,7 @@ export default function App() {
                                 </LineChart>
                             </ResponsiveContainer>
                          ) : (
-                             <div className="flex items-center justify-center h-full text-xs text-slate-500 italic">No data yet</div>
+                             <div className="flex items-center justify-center h-full text-xs text-slate-500 italic">{t.noDataYet}</div>
                          )}
                     </div>
                </div>
@@ -1447,7 +1445,7 @@ export default function App() {
                        </div>
                    )) : (
                        <div className="p-4 text-center text-slate-500 text-sm italic">
-                           No logs recorded this week. 
+                           {t.noLogsThisWeek}
                        </div>
                    )}
                </div>
@@ -1472,7 +1470,7 @@ export default function App() {
                    <input 
                       value={weeklyData.theme}
                       onChange={(e) => setWeeklyData({...weeklyData, theme: e.target.value})}
-                      placeholder="e.g. The Week of Persistence"
+                      placeholder={t.weeklyThemePlaceholder}
                       className="w-full bg-slate-800 border border-slate-700 rounded p-3 text-white font-serif text-lg italic focus:ring-1 focus:ring-primary-500" 
                    />
                </div>
@@ -1568,7 +1566,7 @@ export default function App() {
                            <span className="text-slate-300">"{w.focusForNextWeek}"</span>
                        </div>
                    ))}
-                   {userData.weeklyReflections.length === 0 && <p className="text-xs text-slate-600 italic">No weekly reflections found.</p>}
+                   {userData.weeklyReflections.length === 0 && <p className="text-xs text-slate-600 italic">{t.noWeeklyReflections}</p>}
                </div>
           </div>
 
@@ -1662,14 +1660,14 @@ export default function App() {
           )}
 
           <div className="mt-12 text-left">
-              <h3 className="text-lg font-semibold text-white mb-4">Past Check-Ins</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{t.pastCheckIns}</h3>
               {userData.quarterlyCheckIns.length > 0 ? (
                   <div className="space-y-4">
                       {userData.quarterlyCheckIns.map(q => (
                           <div key={q.id} className="bg-slate-900 border border-slate-800 p-4 rounded-lg hover:border-slate-600 transition-colors">
                               <div className="flex justify-between items-start mb-2">
                                   <div className="text-xs text-slate-500">{new Date(q.date).toLocaleDateString()}</div>
-                                  {q.aiAnalysis && <span className="bg-indigo-900/50 text-indigo-300 text-[10px] px-2 py-0.5 rounded border border-indigo-500/30">Analyzed</span>}
+                                  {q.aiAnalysis && <span className="bg-indigo-900/50 text-indigo-300 text-[10px] px-2 py-0.5 rounded border border-indigo-500/30">{t.analyzedTag}</span>}
                               </div>
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                   <div><span className="text-primary-400">Shifted:</span> <span className="text-slate-300">{q.shifted}</span></div>
@@ -1684,7 +1682,7 @@ export default function App() {
                       ))}
                   </div>
               ) : (
-                  <p className="text-slate-500 italic">No past check-ins recorded.</p>
+                  <p className="text-slate-500 italic">{t.noPastCheckIns}</p>
               )}
           </div>
      </div>
