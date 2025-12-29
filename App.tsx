@@ -16,7 +16,6 @@ import { REFLECTION_CARDS, ReflectionCard } from './constants';
 import { analyzeStoryWithAI, suggestShiftsWithAI, discoverStrengthsWithAI, generateDailySpark, summarizeWeek, analyzeJourneyWithAI, JourneyEntry, suggestThemeWithAI, analyzeQuarterlyCheckIn } from './services/ai';
 import { Layout } from './components/Layout';
 import { Coach } from './components/Coach';
-import { VoiceInput } from './components/VoiceInput';
 import { 
   ArrowRight, 
   Save, 
@@ -52,7 +51,8 @@ import {
   ArrowDown,
   History,
   Activity,
-  User
+  User,
+  MessageCircle
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
 
@@ -121,6 +121,9 @@ export default function App() {
 
   // Phase 2 Definitions Toggle
   const [showDefinitions, setShowDefinitions] = useState(false);
+  
+  // Coach Trigger State
+  const [coachTrigger, setCoachTrigger] = useState<string | undefined>(undefined);
 
   // Translation Helper
   const t = TRANSLATIONS[language];
@@ -481,6 +484,14 @@ export default function App() {
           setIsSuggestingTheme(false);
       }
   };
+  
+  const handleStartCoachJourney = () => {
+      setCoachTrigger("I want to explore my Migration Arc. Please ask me the questions one by one, listen to my answers, and help me spot my strengths.");
+  };
+
+  const handleStartCoachSpotting = () => {
+      setCoachTrigger("I want to do the Strength Spotting exercise. Please interview me about a time I felt at my best.");
+  };
 
   // --- Render Views ---
 
@@ -565,13 +576,27 @@ export default function App() {
                         // --- NARRATIVE DECK JOURNEY UI ---
                         <div className="space-y-4 flex-1 flex flex-col">
                             {!isJourneyActive ? (
-                                <div 
-                                    onClick={startJourney}
-                                    className="bg-slate-800/50 aspect-video rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-primary-500/50 hover:bg-slate-800 transition-all group flex-1"
-                                >
-                                     <Play className="text-slate-600 group-hover:text-primary-400 mb-4" size={48} />
-                                     <span className="text-lg text-white font-medium mb-2">{t.drawCard}</span>
-                                     <p className="text-sm text-slate-500 text-center max-w-xs">{t.journeyIntro}</p>
+                                <div className="flex-1 flex flex-col gap-4">
+                                    <div 
+                                        onClick={startJourney}
+                                        className="bg-slate-800/50 aspect-video rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-primary-500/50 hover:bg-slate-800 transition-all group flex-1"
+                                    >
+                                         <Play className="text-slate-600 group-hover:text-primary-400 mb-4" size={48} />
+                                         <span className="text-lg text-white font-medium mb-2">{t.drawCard}</span>
+                                         <p className="text-sm text-slate-500 text-center max-w-xs">{t.journeyIntro}</p>
+                                    </div>
+                                    
+                                    {/* Interactive Mode Button */}
+                                    <button 
+                                        onClick={handleStartCoachJourney}
+                                        className="bg-indigo-900/50 hover:bg-indigo-800 border border-indigo-500/30 text-indigo-200 p-4 rounded-xl flex items-center gap-3 transition-all"
+                                    >
+                                        <div className="bg-indigo-500/20 p-2 rounded-full"><MessageCircle size={20} className="text-indigo-400"/></div>
+                                        <div className="text-left">
+                                            <div className="font-semibold text-sm">Guided Dialogue Mode</div>
+                                            <div className="text-xs text-indigo-300/70">Discuss your journey with the AI Coach</div>
+                                        </div>
+                                    </button>
                                 </div>
                             ) : (
                                 <div className="animate-fade-in space-y-4 flex-1 flex flex-col">
@@ -601,16 +626,9 @@ export default function App() {
                                         <textarea 
                                             value={discoveryReflection}
                                             onChange={(e) => setDiscoveryReflection(e.target.value)}
-                                            className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 pr-10 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
+                                            className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
                                             placeholder={t.jotDown}
                                         />
-                                        <div className="absolute top-2 right-2">
-                                            <VoiceInput 
-                                                language={language}
-                                                value={discoveryReflection}
-                                                onUpdate={setDiscoveryReflection}
-                                            />
-                                        </div>
                                     </div>
                                     
                                     <div className="mt-auto flex gap-3">
@@ -652,16 +670,21 @@ export default function App() {
                                 </p>
                             </div>
 
-                            <div className="mt-4 flex-1 flex flex-col relative">
+                            {/* Interactive Mode Button for Strength Spotting */}
+                            <button 
+                                onClick={handleStartCoachSpotting}
+                                className="mb-4 bg-indigo-900/50 hover:bg-indigo-800 border border-indigo-500/30 text-indigo-200 p-3 rounded-xl flex items-center gap-3 transition-all"
+                            >
+                                <div className="bg-indigo-500/20 p-2 rounded-full"><MessageCircle size={18} className="text-indigo-400"/></div>
+                                <div className="text-left">
+                                    <div className="font-semibold text-sm">Interactive Strength Spotter</div>
+                                    <div className="text-xs text-indigo-300/70">Let the AI interview you</div>
+                                </div>
+                            </button>
+
+                            <div className="mt-auto flex-1 flex flex-col relative">
                                 <div className="flex justify-between items-center mb-2">
                                      <p className="text-sm text-slate-500">{t.jotDown}</p>
-                                     {/* Voice Input for Standard Prompt */}
-                                     <VoiceInput 
-                                        language={language}
-                                        value={discoveryReflection}
-                                        onUpdate={setDiscoveryReflection}
-                                        className="h-8 w-8"
-                                     />
                                 </div>
                                 
                                 <textarea 
@@ -1310,7 +1333,7 @@ export default function App() {
                     {/* Momentum Chart - UPDATED STRUCTURE */}
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 h-64 flex flex-col">
                          <h3 className="font-semibold text-white mb-4 text-sm uppercase text-slate-500 flex-none">{t.momentum}</h3>
-                         <div className="flex-1 w-full min-h-0">
+                         <div className="flex-1 w-full min-h-0 min-w-0"> {/* Add min-w-0 to prevent flex blowout */}
                              <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={data.length ? data : [{name: 'Today', energy: 0}]}>
                                     <XAxis dataKey="name" tick={{fontSize: 10, fill: '#64748b'}} axisLine={false} tickLine={false} />
@@ -1728,7 +1751,13 @@ export default function App() {
       )}
 
       {/* AI Coach */}
-      <Coach userData={userData} language={language} />
+      <Coach 
+        userData={userData} 
+        setUserData={setUserData} 
+        language={language} 
+        triggerPrompt={coachTrigger}
+        onCloseTrigger={() => setCoachTrigger(undefined)}
+      />
     </Layout>
   );
 }

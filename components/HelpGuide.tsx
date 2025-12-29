@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { TRANSLATIONS } from '../translations';
 import { Language } from '../types';
 import { X, BookOpen, GitBranch, Key, CheckCircle2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface HelpGuideProps {
     language: Language;
@@ -56,16 +58,24 @@ export const HelpGuide: React.FC<HelpGuideProps> = ({ language, onClose }) => {
                 </div>
 
                 {/* Content */}
-                <div className="p-6 overflow-y-auto flex-1 bg-slate-900">
+                <div className="p-6 overflow-y-auto flex-1 bg-slate-900 custom-scrollbar">
                     
                     {activeTab === 'start' && (
                         <div className="space-y-4 animate-fade-in">
                             <h3 className="text-lg font-semibold text-white mb-2">{t.helpTabs.start}</h3>
                             <div className="space-y-3">
                                 {t.helpContent.start.map((line, i) => (
-                                    <p key={i} className="text-slate-300 leading-relaxed text-sm bg-slate-800/50 p-3 rounded-lg border border-slate-800">
-                                        {line}
-                                    </p>
+                                    <div key={i} className="text-slate-300 leading-relaxed text-sm bg-slate-800/50 p-4 rounded-lg border border-slate-800">
+                                        <ReactMarkdown 
+                                            components={{
+                                                strong: ({node, ...props}) => <span className="text-primary-400 font-bold" {...props} />,
+                                                ul: ({node, ...props}) => <ul className="list-disc pl-4 mt-2 space-y-1" {...props} />,
+                                                li: ({node, ...props}) => <li className="text-slate-400" {...props} />
+                                            }}
+                                        >
+                                            {line}
+                                        </ReactMarkdown>
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -74,12 +84,14 @@ export const HelpGuide: React.FC<HelpGuideProps> = ({ language, onClose }) => {
                     {activeTab === 'phases' && (
                         <div className="space-y-4 animate-fade-in">
                             <h3 className="text-lg font-semibold text-white mb-2">{t.helpTabs.phases}</h3>
-                            <div className="relative border-l-2 border-slate-700 ml-3 space-y-6 pl-6 py-2">
+                            <div className="relative border-l-2 border-slate-700 ml-3 space-y-8 pl-8 py-2">
                                 {t.helpContent.phases.map((phase, i) => (
                                     <div key={i} className="relative">
-                                        <div className="absolute -left-[31px] top-1 h-4 w-4 rounded-full bg-slate-900 border-2 border-primary-500" />
-                                        <h4 className="text-white font-semibold text-sm mb-1">{phase.title}</h4>
-                                        <p className="text-slate-400 text-xs leading-relaxed">{phase.desc}</p>
+                                        <div className="absolute -left-[41px] top-1 h-5 w-5 rounded-full bg-slate-900 border-2 border-primary-500 flex items-center justify-center">
+                                            <div className="w-2 h-2 bg-primary-500 rounded-full" />
+                                        </div>
+                                        <h4 className="text-white font-bold text-sm mb-1">{phase.title}</h4>
+                                        <p className="text-slate-400 text-xs leading-relaxed max-w-md">{phase.desc}</p>
                                     </div>
                                 ))}
                             </div>

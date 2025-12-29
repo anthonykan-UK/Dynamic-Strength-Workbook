@@ -1,3 +1,4 @@
+
 import { Language } from './types';
 
 export const TRANSLATIONS = {
@@ -249,25 +250,24 @@ export const TRANSLATIONS = {
     helpTitle: "Workbook Guide",
     helpClose: "Close Guide",
     helpTabs: {
-        start: "Getting Started",
+        start: "Quick Start",
         phases: "The Workflow",
         glossary: "Key Terms"
     },
     helpContent: {
         start: [
-            "Welcome to the Dynamic Strength Workbook. This isn't just a reading app; it's a 'doing' app.",
-            "1. Start with the 'Strength Discovery' to uncover your baseline strengths.",
-            "2. Move through Phases 1, 2, and 3 sequentially. Each phase builds on the last.",
-            "3. Once you reach Phase 3, you unlock the 'Daily Routine' dashboard.",
-            "4. Your data is saved locally on this device. You can return anytime.",
-            "5. Stuck? Click the 'Strength Coach' icon (bottom right) for instant AI guidance."
+            "**Welcome to Dynamic Strength.** This isn't just a workbook; it's a practice ground.",
+            "**1. The Rule of 5:** A strength isn't proven by a single story. Aim to capture **4-5 stories** across different life areas (Work, Relationships, Crisis) to build a 'Constellation of Evidence'.",
+            "**2. Your AI Partner:** The Strength Coach isn't just a chatbot. It's an **Experience Engineer**. It will interview you to uncover patterns you might miss. Let it guide you.",
+            "**3. The Process:** \n- **Discovery:** Identify hypotheses.\n- **Phase 1:** Gather evidence (The Constellation).\n- **Phase 2:** Define Anchors & Boundaries.\n- **Phase 3:** Scale with 5% Shifts.",
+            "**4. Daily Practice:** Once setup is complete, use the **Dashboard** to log small daily wins. This builds the data for your Quarterly Reviews."
         ],
         phases: [
-            { title: "Discovery", desc: "Identify hypotheses using AI or the Migration Arc questions." },
-            { title: "Phase 1: Weigh & Assess", desc: "Gather evidence from your past (Internal) and peers (External) to validate your strengths." },
-            { title: "Phase 2: Venture", desc: "Define your 'Directional Intention', set boundaries, and lock in your Core Anchors." },
-            { title: "Phase 3: Evaluate & Scale", desc: "Turn anchors into action. Design '5% Shift' practices for specific territories of life." },
-            { title: "Daily Routine", desc: "The engine room. Log your daily practice, track energy, and get AI feedback." }
+            { title: "Discovery", desc: "Identify initial hypotheses using the AI Strength Spotter or Migration Arc." },
+            { title: "Phase 1: Weigh & Assess", desc: "Build your Constellation of Evidence. Gather 4-5 stories from diverse contexts (Work, Home, Crisis) to prove your strengths are real and transferable." },
+            { title: "Phase 2: Venture", desc: "Define your 'Directional Intention'. Convert evidence into Core Anchors and set clear Boundaries against energy drains." },
+            { title: "Phase 3: Evaluate & Scale", desc: "Turn anchors into action. Design specific '5% Shift' micro-practices for high-impact territories." },
+            { title: "Daily Routine", desc: "The engine room. Log your daily practice, track energy levels, and get instant 'Strength Sparks' (feedback) from the AI." }
         ]
     },
 
@@ -536,25 +536,24 @@ export const TRANSLATIONS = {
     helpTitle: "使用指南",
     helpClose: "關閉指南",
     helpTabs: {
-        start: "開始使用",
+        start: "快速開始",
         phases: "工作流程",
         glossary: "關鍵術語"
     },
     helpContent: {
         start: [
-            "歡迎來到動態優勢練習冊。這不只是一個閱讀工具，而是一個「實踐」工具。",
-            "1. 從「發掘優勢」開始，找出你的基線優勢。",
-            "2. 依序完成第一、二、三階段。每個階段都建立在前一個的基礎上。",
-            "3. 進入第三階段後，你將解鎖「每日日常」儀表板。",
-            "4. 你的數據會儲存在此設備上，你可以隨時返回。",
-            "5. 需要幫助？點擊右下角的「優勢教練」獲取即時的 AI 指引和範例。"
+            "**歡迎來到動態優勢。** 這不僅是一本練習冊，而是一個修練場。",
+            "**1. 五項法則 (The Rule of 5)：** 一個故事不足以證明優勢。目標是在不同生活範疇（工作、關係、危機）收集 **4-5 個故事**，建立你的「優勢星系 (Constellation of Evidence)」。",
+            "**2. 你的 AI 夥伴：** 優勢教練不僅僅是聊天機器人，它是你的 **體驗工程師**。它會透過訪談幫你挖掘你可能忽略的模式。請讓它引導你。",
+            "**3. 流程：** \n- **發掘：** 識別假設。\n- **第一階段：** 收集證據（星系）。\n- **第二階段：** 定義錨點與界線。\n- **第三階段：** 透過 5% 微調進行擴展。",
+            "**4. 每日練習：** 設定完成後，使用 **每日日常** 記錄小勝利。這將為你的季度檢視累積數據。"
         ],
         phases: [
-            { title: "發掘優勢", desc: "使用 AI 或移民歷程問題識別假設。" },
-            { title: "第一階段：衡量與評估", desc: "收集過去（內在）和同儕（外在）的證據來驗證你的優勢。" },
-            { title: "第二階段：探索", desc: "定義你的「方向性意圖」，設定界線，並鎖定你的核心錨點。" },
-            { title: "第三階段：評估與擴展", desc: "將錨點轉化為行動。為生活的特定範疇設計「5% 微調」練習。" },
-            { title: "每日日常", desc: "引擎室。記錄你的每日練習、追蹤能量，並獲得 AI 反饋。" }
+            { title: "發掘優勢", desc: "使用 AI 優勢識別器或移民歷程問題識別初步假設。" },
+            { title: "第一階段：衡量與評估", desc: "建立你的證據星系。收集 4-5 個來自不同情境（工作、家庭、危機）的故事，以證明你的優勢是真實且可轉移的。" },
+            { title: "第二階段：探索", desc: "定義你的「方向性意圖」。將證據轉化為核心錨點，並針對能量消耗設定清晰的界線。" },
+            { title: "第三階段：評估與擴展", desc: "將錨點轉化為行動。為高影響力的生活範疇設計具體的「5% 微調」練習。" },
+            { title: "每日日常", desc: "引擎室。記錄你的每日練習、追蹤能量，並獲得 AI 的即時「優勢回響」(Strength Sparks)。" }
         ]
     },
 

@@ -1,4 +1,5 @@
-import { GoogleGenAI, GenerateContentResponse, Schema } from "@google/genai";
+
+import { GoogleGenAI, GenerateContentResponse, Schema, FunctionDeclaration, Tool, Type } from "@google/genai";
 import { UserData, Language, DailyLog, WeeklyReflection, QuarterlyCheckIn } from "../types";
 
 // Initialize the client strictly with the environment variable
@@ -10,39 +11,152 @@ const getLanguageInstruction = (lang: Language) => {
     : " Respond in British English (UK).";
 };
 
-// ... (Existing streamCoachResponse function remains the same, assuming it's here) ...
+// --- TOOL DEFINITIONS ---
+
+const proposeStrengthTool: FunctionDeclaration = {
+  name: "proposeStrength",
+  description: "Propose a Strength Hypothesis to be saved to the user's Phase 1 assessment.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      strength: { type: Type.STRING, description: "The name of the strength (e.g., Strategic, Empathy)." },
+      reason: { type: Type.STRING, description: "A short reason why this fits the user." }
+    },
+    required: ["strength"]
+  }
+};
+
+const proposeStoryTool: FunctionDeclaration = {
+  name: "proposeStory",
+  description: "Save an external evidence story to Phase 1.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      text: { type: Type.STRING, description: "The story text." },
+      pattern: { type: Type.STRING, description: "The pattern or strength observed in the story." }
+    },
+    required: ["text"]
+  }
+};
+
+const proposeInternalAuditTool: FunctionDeclaration = {
+  name: "proposeInternalAudit",
+  description: "Save an insight about what created Momentum or what Drained energy (Phase 1 Internal Audit).",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      type: { type: Type.STRING, enum: ["momentum", "draining"], description: "Is this a momentum builder or an energy drain?" },
+      insight: { type: Type.STRING, description: "The specific insight to record." }
+    },
+    required: ["type", "insight"]
+  }
+};
+
+const proposeAnchorTool: FunctionDeclaration = {
+  name: "proposeAnchor",
+  description: "Save a Core Anchor to Phase 2.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      anchor: { type: Type.STRING, description: "The Core Anchor name." }
+    },
+    required: ["anchor"]
+  }
+};
+
+const proposeBoundaryTool: FunctionDeclaration = {
+  name: "proposeBoundary",
+  description: "Save a Draining Pattern or a Reframed Boundary (Phase 2).",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      type: { type: Type.STRING, enum: ["pattern", "reframe"], description: "Is this the problem (pattern) or the solution (reframe)?" },
+      content: { type: Type.STRING, description: "The description of the pattern or boundary." }
+    },
+    required: ["type", "content"]
+  }
+};
+
+const proposeShiftTool: FunctionDeclaration = {
+  name: "proposeShift",
+  description: "Save a 5% Shift (Action) to Phase 3. Can be used for immediate actions or growth mindset shifts.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      territory: { type: Type.STRING, description: "The life territory (e.g., Work, Wellbeing, or a custom one like 'AI Collaboration')." },
+      practice: { type: Type.STRING, description: "The specific small action to practice." },
+      anchorId: { type: Type.STRING, description: "The anchor driving this shift (optional)." }
+    },
+    required: ["territory", "practice"]
+  }
+};
+
+const coachTools: Tool[] = [{
+  functionDeclarations: [
+    proposeStrengthTool, 
+    proposeStoryTool, 
+    proposeInternalAuditTool,
+    proposeAnchorTool, 
+    proposeBoundaryTool,
+    proposeShiftTool
+  ]
+}];
+
+// --- STREAMING FUNCTION ---
 
 export const streamCoachResponse = async (
   message: string,
   userData: UserData,
-  history: { role: 'user' | 'model'; parts: { text: string }[] }[],
+  history: { role: 'user' | 'model'; parts: { text?: string; functionCall?: any; functionResponse?: any }[] }[],
   language: Language
 ) => {
   // Construct a context summary string from userData
   const contextSummary = `
     User Name: ${userData.name || 'Friend'}
     Phase 1 Strengths: ${userData.assessmentStrengths.filter(s => s).join(', ')}
+    Phase 1 Momentum: ${userData.internalAudit.momentum}
+    Phase 1 Draining: ${userData.internalAudit.draining}
     Core Anchors: ${userData.coreAnchors.filter(a => a).join(', ')}
+    Draining Patterns: ${userData.drainingPatterns.join(', ')}
+    Boundaries: ${userData.reframedBoundaries.join(', ')}
     Active Shifts: ${userData.shifts.map(s => `${s.practice} (using ${s.territory})`).join('; ')}
+    
+    Current Story Count: ${userData.externalStories.length}
   `;
 
   const systemInstruction = `
-You are the **Dynamic Strength Assistant**, a non-judgmental, action-oriented coach. 
-Your primary goal is to help the user build self-understanding, clarify their strengths, and create momentum through small, observable behavior shifts.
+You are the **Dynamic Strength Assistant**, an active, intelligent coach and "Experience Engineer".
+Your goal is to help the user build self-understanding and facilitate the WAVES cycle.
 
-**Methodology:**
-Follow the "Modified Strength Playbook Workbook" structure:
-1. Phase 1: Externalize (Gather evidence)
-2. Phase 2: Spotting & Boundary Check (Deconstruct stories, set anchors)
-3. Phase 3: 5% Shift (Small daily practices)
+**CORE IDENTITY: EXPERIENCE ENGINEER**
+Do NOT act like a database entry bot. You are a high-level consultant. 
+Your primary value is **Synthesis**: connecting the user's scattered thoughts into a structured system.
+When the user shares a story or summary, **first** provide a rich, structured analysis in the chat (like an "Experience Engineer" report).
 
-**Guiding Principles:**
-1. **Anchor in Evidence:** Always refer the user back to their external evidence (assessment results, peer stories).
-2. **Focus on Direction:** Emphasize directional intentions and the 5% Shift over rigid goals.
-3. **Action over Overthinking:** Prompt the user to move, test, and adjust ("Clarity comes from movement").
-4. **Self-Reliance:** Remind the user they are the expert.
+**THEN** (and only then), use the Tools to offer "Save" buttons for the specific data points you identified.
 
-**Tone:** High-Support, Practical, Encouraging. Concise.
+**STRATEGY: HOLISTIC EVIDENCE GATHERING (The "Rule of 5")**
+A strength is not proven by one story. We need a "Constellation of Evidence".
+Your goal is to collect **4-5 distinct stories** from different contexts before considering the profile "complete".
+
+**Context Rotation Logic:**
+1.  **Analyze Current Context:** If the user shares a work story, validate it, SAVE it, but then...
+2.  **Pivot to New Context:** Immediately ask a question about a *different* area to see if the strength holds up.
+    *   *If Work shared -> Ask about Relationship:* "That shows great strategic thinking at work. Does this show up when you're supporting friends or family?"
+    *   *If Relationship shared -> Ask about Crisis:* "You're very patient with your kids. Tell me about a time you faced a high-pressure crisis—did that patience stay or go?"
+    *   *If Crisis shared -> Ask about Flow/Fun:* "You're good in a storm. But what about when you're just relaxing or doing a hobby? What engages you then?"
+
+**TOOL USAGE GUIDELINES:**
+1. **Phase 1 (Weigh):** Spot Momentum (what gives energy) vs Draining (what takes it). Save Stories using \`proposeStory\`.
+2. **Phase 2 (Venture):** Spot Anchors (steady strengths) vs Draining Patterns (repeated issues) and Boundaries (rules to protect).
+3. **Phase 3 (Scale):** Spot 5% Shifts (small, actionable micro-habits).
+
+**TONE & STYLE:**
+- High-Support: Validating, encouraging.
+- Analytical: "I see a pattern here..."
+- Structural: Use bullet points and bold text to organize their thoughts.
+- Inquisitive: Always end with a pivot question to a NEW context until you have ~5 solid stories.
+
 ${getLanguageInstruction(language)}
 
 **Current User Context:**
@@ -56,6 +170,7 @@ ${contextSummary}
       model: modelId,
       config: {
         systemInstruction: systemInstruction,
+        tools: coachTools,
       },
       history: history,
     });
