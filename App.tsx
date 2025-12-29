@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   UserData, 
@@ -15,6 +16,7 @@ import { REFLECTION_CARDS, ReflectionCard } from './constants';
 import { analyzeStoryWithAI, suggestShiftsWithAI, discoverStrengthsWithAI, generateDailySpark, summarizeWeek, analyzeJourneyWithAI, JourneyEntry, suggestThemeWithAI, analyzeQuarterlyCheckIn } from './services/ai';
 import { Layout } from './components/Layout';
 import { Coach } from './components/Coach';
+import { VoiceInput } from './components/VoiceInput';
 import { 
   ArrowRight, 
   Save, 
@@ -595,12 +597,21 @@ export default function App() {
                                         </p>
                                     </div>
                                     
-                                    <textarea 
-                                        value={discoveryReflection}
-                                        onChange={(e) => setDiscoveryReflection(e.target.value)}
-                                        className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
-                                        placeholder={t.jotDown}
-                                    />
+                                    <div className="relative">
+                                        <textarea 
+                                            value={discoveryReflection}
+                                            onChange={(e) => setDiscoveryReflection(e.target.value)}
+                                            className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 pr-10 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
+                                            placeholder={t.jotDown}
+                                        />
+                                        <div className="absolute top-2 right-2">
+                                            <VoiceInput 
+                                                language={language}
+                                                value={discoveryReflection}
+                                                onUpdate={setDiscoveryReflection}
+                                            />
+                                        </div>
+                                    </div>
                                     
                                     <div className="mt-auto flex gap-3">
                                         <button 
@@ -641,10 +652,18 @@ export default function App() {
                                 </p>
                             </div>
 
-                            <div className="mt-4 flex-1 flex flex-col">
-                                <p className="text-sm text-slate-500 mb-2">
-                                    {t.jotDown}
-                                </p>
+                            <div className="mt-4 flex-1 flex flex-col relative">
+                                <div className="flex justify-between items-center mb-2">
+                                     <p className="text-sm text-slate-500">{t.jotDown}</p>
+                                     {/* Voice Input for Standard Prompt */}
+                                     <VoiceInput 
+                                        language={language}
+                                        value={discoveryReflection}
+                                        onUpdate={setDiscoveryReflection}
+                                        className="h-8 w-8"
+                                     />
+                                </div>
+                                
                                 <textarea 
                                     value={discoveryReflection}
                                     onChange={(e) => setDiscoveryReflection(e.target.value)}
