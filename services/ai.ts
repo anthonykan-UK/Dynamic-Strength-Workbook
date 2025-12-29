@@ -328,6 +328,43 @@ export const suggestShiftsWithAI = async (territory: string, anchor: string, lan
   }
 };
 
+export const suggestBoundaryWithAI = async (drainingPattern: string, language: Language) => {
+    const langPrompt = language === 'zh-HK' 
+      ? "Suggest in Traditional Chinese (Hong Kong)." 
+      : "Suggest in British English.";
+  
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `The user has identified this draining pattern: "${drainingPattern}".
+        
+        Suggest 3 healthy, actionable "Reframed Boundaries" they could set to protect their energy.
+        These should be permissions to act differently, not just "stop doing it".
+        Examples: "I will pause before saying yes," "I give myself permission to leave on time," "I will ask for specific details before committing."
+        
+        ${langPrompt}`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT" as any,
+            properties: {
+              suggestions: {
+                type: "ARRAY" as any,
+                items: { type: "STRING" as any }
+              }
+            }
+          }
+        }
+      });
+      
+      const data = JSON.parse(response.text || "{}");
+      return data.suggestions || [];
+    } catch (error) {
+      console.error("Boundary Suggestion Error:", error);
+      throw error;
+    }
+  };
+
 export const discoverStrengthsWithAI = async (reflection: string, language: Language, contextQuestion?: string) => {
   const langPrompt = language === 'zh-HK' 
     ? "Output strengths in Traditional Chinese (Hong Kong)." 

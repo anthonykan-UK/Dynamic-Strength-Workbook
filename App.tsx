@@ -13,7 +13,7 @@ import {
 } from './types';
 import { TRANSLATIONS } from './translations';
 import { REFLECTION_CARDS, ReflectionCard } from './constants';
-import { analyzeStoryWithAI, suggestShiftsWithAI, discoverStrengthsWithAI, generateDailySpark, summarizeWeek, analyzeJourneyWithAI, JourneyEntry, suggestThemeWithAI, analyzeQuarterlyCheckIn } from './services/ai';
+import { analyzeStoryWithAI, suggestShiftsWithAI, discoverStrengthsWithAI, generateDailySpark, summarizeWeek, analyzeJourneyWithAI, JourneyEntry, suggestThemeWithAI, analyzeQuarterlyCheckIn, suggestBoundaryWithAI } from './services/ai';
 import { Layout } from './components/Layout';
 import { Coach } from './components/Coach';
 import { 
@@ -76,6 +76,10 @@ export default function App() {
   const [suggestingShiftId, setSuggestingShiftId] = useState<string | null>(null);
   const [shiftSuggestions, setShiftSuggestions] = useState<Record<string, string[]>>({});
   
+  // Boundary Suggestion State
+  const [suggestingBoundary, setSuggestingBoundary] = useState(false);
+  const [boundarySuggestions, setBoundarySuggestions] = useState<string[]>([]);
+
   // Discovery View State
   const [discoveryReflection, setDiscoveryReflection] = useState('');
   const [isDiscovering, setIsDiscovering] = useState(false);
@@ -255,6 +259,29 @@ export default function App() {
         delete newState[shiftId];
         return newState;
     });
+  };
+
+  const handleSuggestBoundary = async () => {
+      if (!userData.drainingPatterns[0]) {
+          showNotification(t.notifications.missingDrain); 
+          return;
+      }
+      setSuggestingBoundary(true);
+      try {
+          const suggestions = await suggestBoundaryWithAI(userData.drainingPatterns[0], language);
+          setBoundarySuggestions(suggestions);
+      } catch (e) {
+          showNotification(t.notifications.failedSuggest);
+      } finally {
+          setSuggestingBoundary(false);
+      }
+  };
+
+  const applyBoundarySuggestion = (suggestion: string) => {
+      const newB = [...userData.reframedBoundaries];
+      newB[0] = suggestion;
+      setUserData({...userData, reframedBoundaries: newB});
+      setBoundarySuggestions([]);
   };
 
   // --- Discovery Journey Handlers ---
@@ -1046,10 +1073,36 @@ export default function App() {
             </div>
             
             {/* Reframe Column */}
-            <div className="bg-slate-800/50 p-6 rounded-lg border border-green-500/20 flex flex-col">
-                <label className="block text-sm font-semibold text-green-300 mb-2 flex items-center gap-2">
-                    <ShieldCheck size={16} /> {t.reframedBoundary}
-                </label>
+            <div className="bg-slate-800/50 p-6 rounded-lg border border-green-500/20 flex flex-col relative">
+                <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-semibold text-green-300 flex items-center gap-2">
+                        <ShieldCheck size={16} /> {t.reframedBoundary}
+                    </label>
+                    <button 
+                        onClick={handleSuggestBoundary}
+                        disabled={suggestingBoundary}
+                        className="text-xs bg-green-900/40 text-green-400 hover:text-green-300 px-2 py-1 rounded flex items-center gap-1 transition-colors disabled:opacity-50"
+                    >
+                        {suggestingBoundary ? <Loader2 className="animate-spin" size={12}/> : <Sparkles size={12} />}
+                        {t.suggestBoundary}
+                    </button>
+                </div>
+                
+                {boundarySuggestions.length > 0 && (
+                    <div className="mb-3 flex flex-col gap-2 p-3 bg-slate-900 rounded-lg border border-slate-700 animate-fade-in">
+                         <span className="text-xs text-slate-500 flex items-center gap-1"><Lightbulb size={12}/> {t.selectBoundary}</span>
+                         {boundarySuggestions.map((s, i) => (
+                             <button 
+                                key={i} 
+                                onClick={() => applyBoundarySuggestion(s)}
+                                className="text-left text-sm text-slate-200 hover:bg-slate-800 p-2 rounded transition-colors border border-transparent hover:border-slate-600"
+                             >
+                                {s}
+                             </button>
+                         ))}
+                    </div>
+                )}
+
                 <div className="mb-4">
                      <p className="text-xs text-slate-400 mb-2" dangerouslySetInnerHTML={{ __html: t.boundaryDescription }}></p>
                 </div>

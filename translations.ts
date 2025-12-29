@@ -103,6 +103,8 @@ export const TRANSLATIONS = {
     drainingPatternHelp: "Activities that don't build transferrable capability.",
     reframedBoundary: "Reframed Boundary",
     reframedBoundaryHelp: "Give yourself permission to adjust. (e.g. 'I will pause...', 'I will ask for help...')",
+    suggestBoundary: "Suggest Reframe",
+    selectBoundary: "Select a boundary idea:",
     finalAnchors: "Name Your Core Anchors",
     finalAnchorsDesc: "These are your 3-5 unique Core Strengths to leverage in uncertainty.",
     anchorDefinition: "A pattern you consistently use that generates supportive outcomes. It feels generative (builds energy) rather than depleting.",
@@ -219,7 +221,7 @@ export const TRANSLATIONS = {
     q_flow_help: "Where are you seeing energy and meaningful impacts?",
     q_adjust: "3. What needs adjustment?",
     q_adjust_help: "Where are patterns not serving you? What experiment could you try?",
-    q_emerging: "4. What's emerging?",
+    q_emerging: "4. 什麼正在浮現？",
     q_emerging_help: "Unexpected opportunities or new capabilities becoming visible?",
     saveQuarterly: "Save Check-In",
     noWeeklyReflections: "No weekly reflections found.",
@@ -285,7 +287,8 @@ export const TRANSLATIONS = {
       anchorsLocked: "Anchors locked.",
       systemReady: "System ready.",
       dailyLogged: "Momentum Captured!",
-      quarterlySaved: "Quarterly check-in saved."
+      quarterlySaved: "Quarterly check-in saved.",
+      missingDrain: "Define a draining pattern first."
     }
   },
   'zh-HK': {
@@ -389,6 +392,8 @@ export const TRANSLATIONS = {
     drainingPatternHelp: "那些無法建立可轉移能力的活動。",
     reframedBoundary: "重構界線",
     reframedBoundaryHelp: "允許自己進行調整。（例如：「我會暫停...」、「我會尋求幫助...」）",
+    suggestBoundary: "建議重構",
+    selectBoundary: "選擇一個界線想法：",
     finalAnchors: "命名你的核心錨點",
     finalAnchorsDesc: "這是你 3-5 個獨特的核心優勢，用於在不確定中發揮槓桿作用。",
     anchorDefinition: "一種你持續使用並產生支持性成果的模式。它感覺是再生性的（增加能量），而不是消耗性的。",
@@ -571,7 +576,8 @@ export const TRANSLATIONS = {
       anchorsLocked: "錨點已鎖定。",
       systemReady: "系統就緒。",
       dailyLogged: "動力已捕捉！",
-      quarterlySaved: "季度檢視已儲存。"
+      quarterlySaved: "季度檢視已儲存。",
+      missingDrain: "請先定義耗能模式。"
     }
   }
 };
