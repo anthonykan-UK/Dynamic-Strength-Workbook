@@ -65,7 +65,7 @@ export const HelpGuide: React.FC<HelpGuideProps> = ({ language, onClose }) => {
                             <h3 className="text-lg font-semibold text-white mb-2">{t.helpTabs.start}</h3>
                             <div className="space-y-3">
                                 {t.helpContent.start.map((line, i) => (
-                                    <div key={i} className="text-slate-300 leading-relaxed text-sm bg-slate-800/50 p-4 rounded-lg border border-slate-800">
+                                    <div key={i} className="text-slate-300 leading-relaxed text-base bg-slate-800/50 p-4 rounded-lg border border-slate-800">
                                         <ReactMarkdown 
                                             components={{
                                                 strong: ({node, ...props}) => <span className="text-primary-400 font-bold" {...props} />,
@@ -90,8 +90,8 @@ export const HelpGuide: React.FC<HelpGuideProps> = ({ language, onClose }) => {
                                         <div className="absolute -left-[41px] top-1 h-5 w-5 rounded-full bg-slate-900 border-2 border-primary-500 flex items-center justify-center">
                                             <div className="w-2 h-2 bg-primary-500 rounded-full" />
                                         </div>
-                                        <h4 className="text-white font-bold text-sm mb-1">{phase.title}</h4>
-                                        <p className="text-slate-400 text-xs leading-relaxed max-w-md">{phase.desc}</p>
+                                        <h4 className="text-white font-bold text-base mb-1">{phase.title}</h4>
+                                        <p className="text-slate-400 text-sm leading-relaxed max-w-md">{phase.desc}</p>
                                     </div>
                                 ))}
                             </div>
@@ -105,7 +105,7 @@ export const HelpGuide: React.FC<HelpGuideProps> = ({ language, onClose }) => {
                                 {t.definitions.map((def, i) => (
                                     <div key={i} className="bg-slate-800 p-4 rounded-lg border border-slate-700">
                                         <div className="text-primary-400 font-bold text-sm mb-1 uppercase tracking-wide">{def.term}</div>
-                                        <div className="text-slate-300 text-sm leading-relaxed">{def.def}</div>
+                                        <div className="text-slate-300 text-base leading-relaxed">{def.def}</div>
                                     </div>
                                 ))}
                             </div>

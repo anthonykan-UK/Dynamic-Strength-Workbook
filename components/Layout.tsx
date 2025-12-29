@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -44,13 +45,13 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
         setView(view);
         setMobileMenuOpen(false);
       }}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-base font-medium ${
         currentView === view
           ? 'bg-primary-600/10 text-primary-400 border-l-4 border-primary-500'
           : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
       }`}
     >
-      <Icon size={18} />
+      <Icon size={20} />
       {label}
     </button>
   );
@@ -58,19 +59,19 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
   const LanguageToggle = () => (
     <div className="px-4 py-3 mb-2 flex items-center justify-between bg-slate-800 rounded-lg mx-4">
       <div className="flex items-center gap-2 text-sm text-slate-300">
-        <Globe size={16} />
+        <Globe size={18} />
         <span>{language === 'en-GB' ? 'Language' : '語言'}</span>
       </div>
       <div className="flex bg-slate-900 rounded p-1">
          <button 
            onClick={() => setLanguage('en-GB')}
-           className={`px-2 py-1 text-xs rounded transition-colors ${language === 'en-GB' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+           className={`px-3 py-1.5 text-xs rounded transition-colors ${language === 'en-GB' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
          >
            EN
          </button>
          <button 
            onClick={() => setLanguage('zh-HK')}
-           className={`px-2 py-1 text-xs rounded transition-colors ${language === 'zh-HK' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+           className={`px-3 py-1.5 text-xs rounded transition-colors ${language === 'zh-HK' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
          >
            繁
          </button>
@@ -150,7 +151,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
             <div className="pt-4 mt-4 border-t border-slate-800">
                 <button 
                     onClick={() => { setShowHelp(true); setMobileMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-lg transition-colors text-sm font-medium"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-lg transition-colors text-base font-medium"
                 >
                     <HelpCircle size={18} />
                     {t.helpTitle}

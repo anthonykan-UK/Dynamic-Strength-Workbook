@@ -247,51 +247,51 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
 
       if (name === 'proposeStrength') {
           title = "Strength Discovered";
-          icon = <Award size={18}/>;
+          icon = <Award size={20}/>;
           content = args.strength;
       } else if (name === 'proposeStory') {
           title = "Evidence Story";
-          icon = <BookOpen size={18}/>;
+          icon = <BookOpen size={20}/>;
           content = `"${args.text.substring(0, 50)}..."`;
           iconColor = "text-blue-400";
           colorClass = "border-blue-500/50";
       } else if (name === 'proposeInternalAudit') {
           if (args.type === 'momentum') {
               title = "Momentum (Internal Audit)";
-              icon = <Scale size={18}/>;
+              icon = <Scale size={20}/>;
               content = args.insight;
               iconColor = "text-green-400";
               colorClass = "border-green-500/50";
           } else {
               title = "Energy Drain (Internal Audit)";
-              icon = <BatteryWarning size={18}/>;
+              icon = <BatteryWarning size={20}/>;
               content = args.insight;
               iconColor = "text-red-400";
               colorClass = "border-red-500/50";
           }
       } else if (name === 'proposeAnchor') {
           title = "Core Anchor Identified";
-          icon = <Anchor size={18}/>;
+          icon = <Anchor size={20}/>;
           content = args.anchor;
           iconColor = "text-yellow-400";
           colorClass = "border-yellow-500/50";
       } else if (name === 'proposeBoundary') {
           if (args.type === 'pattern') {
               title = "Draining Pattern";
-              icon = <ShieldAlert size={18}/>;
+              icon = <ShieldAlert size={20}/>;
               content = args.content;
               iconColor = "text-orange-400";
               colorClass = "border-orange-500/50";
           } else {
               title = "Reframed Boundary";
-              icon = <Check size={18}/>;
+              icon = <Check size={20}/>;
               content = args.content;
               iconColor = "text-teal-400";
               colorClass = "border-teal-500/50";
           }
       } else if (name === 'proposeShift') {
           title = "5% Shift Action";
-          icon = <Compass size={18}/>;
+          icon = <Compass size={20}/>;
           content = `${args.practice} (${args.territory})`;
           iconColor = "text-green-400";
           colorClass = "border-green-500/50";
@@ -300,8 +300,8 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
       if (status === 'saved') {
           return (
               <div key={index} className="flex justify-start w-full animate-fade-in my-2">
-                  <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-3 flex items-center gap-3 text-sm text-green-200">
-                      <Check size={16} /> Saved: <strong>{content.substring(0, 30)}{content.length > 30 ? '...' : ''}</strong>
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-3 flex items-center gap-3 text-base text-green-200">
+                      <Check size={18} /> Saved: <strong>{content.substring(0, 30)}{content.length > 30 ? '...' : ''}</strong>
                   </div>
               </div>
           );
@@ -313,24 +313,24 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
           <div key={index} className="flex justify-start w-full animate-fade-in my-2">
               <div className={`bg-slate-800 border-2 ${colorClass} rounded-xl p-4 w-[85%] shadow-lg relative overflow-hidden`}>
                   <div className="absolute top-0 right-0 p-2 opacity-10"><Sparkles size={40}/></div>
-                  <div className={`flex items-center gap-2 mb-2 ${iconColor} font-semibold text-sm uppercase tracking-wide`}>
+                  <div className={`flex items-center gap-2 mb-2 ${iconColor} font-semibold text-base uppercase tracking-wide`}>
                       {React.cloneElement(icon as React.ReactElement, { className: iconColor })} {title}
                   </div>
-                  <div className="text-white text-sm font-medium mb-3 leading-relaxed">
+                  <div className="text-white text-base font-medium mb-3 leading-relaxed">
                       {content}
                   </div>
                   <div className="flex gap-2">
                       <button 
                           onClick={() => handleToolAction(index, 'dismiss')}
-                          className="px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-700 transition-colors"
+                          className="px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-700 transition-colors"
                       >
                           Dismiss
                       </button>
                       <button 
                           onClick={() => handleToolAction(index, 'save')}
-                          className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 px-3 py-2 rounded-lg text-sm font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors flex items-center justify-center gap-2"
                       >
-                          <Save size={14} /> Save to Workbook
+                          <Save size={16} /> Save to Workbook
                       </button>
                   </div>
               </div>
@@ -355,7 +355,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
       <div className="bg-primary-600 p-4 flex justify-between items-center text-white">
         <div className="flex items-center gap-2">
           <Sparkles size={20} />
-          <h3 className="font-semibold">Strength Coach</h3>
+          <h3 className="font-semibold text-base">Strength Coach</h3>
         </div>
         <button onClick={handleClose} className="hover:bg-primary-500 p-1 rounded">
           <X size={20} />
@@ -370,7 +370,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
 
             return (
                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] rounded-lg p-3 text-sm leading-relaxed ${
+                    <div className={`max-w-[85%] rounded-lg p-3 text-base leading-relaxed ${
                     msg.role === 'user' 
                         ? 'bg-primary-600 text-white rounded-br-none' 
                         : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none'
@@ -399,7 +399,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder={t.askGuidance}
-            className="w-full bg-slate-900 border border-slate-700 rounded-full py-3 px-4 pr-12 text-sm text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            className="w-full bg-slate-900 border border-slate-700 rounded-full py-3 px-4 pr-12 text-base text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
           />
           <button
             onClick={() => handleSend()}

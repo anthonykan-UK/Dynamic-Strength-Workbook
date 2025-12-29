@@ -522,8 +522,6 @@ export default function App() {
 
   // --- Render Views ---
 
-  // ... (renderWelcomeView, renderDiscoveryView, renderPhase1View, renderPhase2View, renderPhase3View, renderDashboardView omitted for brevity as they are unchanged) ...
-  // Re-declare them here for context of the file structure, assuming they exist as defined in previous turns.
   const renderWelcomeView = () => (
     <div className="space-y-8 animate-fade-in">
       <div className="bg-gradient-to-br from-primary-600 to-indigo-800 p-8 rounded-2xl shadow-xl text-white">
@@ -533,7 +531,7 @@ export default function App() {
         </p>
         <button 
           onClick={() => setView('discovery')}
-          className="mt-8 bg-white text-primary-600 px-6 py-3 rounded-full font-semibold hover:bg-indigo-50 transition-colors flex items-center gap-2"
+          className="mt-8 bg-white text-primary-600 px-6 py-3 rounded-full font-semibold hover:bg-indigo-50 transition-colors flex items-center gap-2 text-base"
         >
           {t.beginDiscovery} <ArrowRight size={18} />
         </button>
@@ -567,12 +565,12 @@ export default function App() {
         <header className="border-b border-slate-800 pb-4 flex flex-col md:flex-row justify-between md:items-end gap-4">
             <div>
                 <h2 className="text-2xl font-bold text-white mb-2">{t.discoveryTitle}</h2>
-                <p className="text-slate-400">{t.discoverySubtitle}</p>
+                <p className="text-slate-400 text-base">{t.discoverySubtitle}</p>
             </div>
             
             {/* Audience Toggle */}
             <div className="bg-slate-800 p-3 rounded-lg flex items-center gap-3 border border-slate-700">
-                 <span className="text-xs text-slate-300 font-medium">{t.bnoContextToggle}</span>
+                 <span className="text-sm text-slate-300 font-medium">{t.bnoContextToggle}</span>
                  <button 
                     onClick={() => {
                         const newState = !userData.useBNODeck;
@@ -628,7 +626,7 @@ export default function App() {
                             ) : (
                                 <div className="animate-fade-in space-y-4 flex-1 flex flex-col">
                                     {/* Progress Bar */}
-                                    <div className="flex items-center gap-2 text-xs text-slate-400 uppercase tracking-wider mb-1">
+                                    <div className="flex items-center gap-2 text-sm text-slate-400 uppercase tracking-wider mb-1">
                                         <span className="text-primary-400 font-bold">{getStageLabel(currentCard!.category)}</span>
                                         <span className="flex-1 h-1 bg-slate-800 rounded overflow-hidden">
                                             <div className="h-full bg-primary-500 transition-all duration-500" style={{width: `${((currentJourneyIndex + 1)/6)*100}%`}}></div>
@@ -653,7 +651,7 @@ export default function App() {
                                         <textarea 
                                             value={discoveryReflection}
                                             onChange={(e) => setDiscoveryReflection(e.target.value)}
-                                            className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
+                                            className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white text-base focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
                                             placeholder={t.jotDown}
                                         />
                                     </div>
@@ -684,7 +682,7 @@ export default function App() {
                         <div className="flex-1 flex flex-col">
                             <div className="bg-slate-800/50 p-4 rounded-lg mb-4 border border-slate-700/50 relative">
                                 <div className="flex justify-between items-start mb-2">
-                                    <span className="text-xs uppercase font-bold text-primary-400 tracking-wider">{t.sparkPrompt} {promptIndex + 1}/{t.prompts.length}</span>
+                                    <span className="text-sm uppercase font-bold text-primary-400 tracking-wider">{t.sparkPrompt} {promptIndex + 1}/{t.prompts.length}</span>
                                     <button 
                                         onClick={nextPrompt} 
                                         className="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-2 py-1 rounded transition-colors"
@@ -692,7 +690,7 @@ export default function App() {
                                         {t.next} <ChevronRight size={12} />
                                     </button>
                                 </div>
-                                <p className="text-slate-200 font-medium leading-relaxed min-h-[3rem]">
+                                <p className="text-slate-200 font-medium leading-relaxed min-h-[3rem] text-base">
                                 "{t.prompts[promptIndex]}"
                                 </p>
                             </div>
@@ -711,18 +709,18 @@ export default function App() {
 
                             <div className="mt-auto flex-1 flex flex-col relative">
                                 <div className="flex justify-between items-center mb-2">
-                                     <p className="text-sm text-slate-500">{t.jotDown}</p>
+                                     <p className="text-base text-slate-500">{t.jotDown}</p>
                                 </div>
                                 
                                 <textarea 
                                     value={discoveryReflection}
                                     onChange={(e) => setDiscoveryReflection(e.target.value)}
-                                    className="w-full flex-1 bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
+                                    className="w-full flex-1 bg-slate-800 border border-slate-700 rounded p-3 text-white text-base focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
                                 />
                                 <button 
                                     onClick={handleSingleDiscoverySubmit}
                                     disabled={isDiscovering || !discoveryReflection}
-                                    className="bg-slate-800 hover:bg-slate-700 text-primary-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 w-full justify-center border border-slate-700"
+                                    className="bg-slate-800 hover:bg-slate-700 text-primary-400 px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 w-full justify-center border border-slate-700"
                                 >
                                     {isDiscovering ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
                                     {t.analyzeSuggest}
@@ -738,15 +736,15 @@ export default function App() {
                     
                     <div className="space-y-2">
                         {selectedDiscoveryStrengths.map((s, i) => (
-                            <div key={i} className="flex justify-between items-center bg-primary-600/20 border border-primary-500/30 px-3 py-2 rounded-lg text-white">
-                                <span>{i+1}. {s}</span>
-                                <button onClick={() => toggleDiscoveryStrength(s)} className="text-slate-400 hover:text-white">
-                                    <X size={14} />
+                            <div key={i} className="flex justify-between items-center bg-primary-600/20 border border-primary-500/30 px-3 py-3 rounded-lg text-white">
+                                <span className="text-base">{i+1}. {s}</span>
+                                <button onClick={() => toggleDiscoveryStrength(s)} className="text-slate-400 hover:text-white p-1">
+                                    <X size={16} />
                                 </button>
                             </div>
                         ))}
                         {[...Array(5 - selectedDiscoveryStrengths.length)].map((_, i) => (
-                             <div key={i} className="border border-dashed border-slate-800 px-3 py-2 rounded-lg text-slate-600 text-sm">
+                             <div key={i} className="border border-dashed border-slate-800 px-3 py-3 rounded-lg text-slate-600 text-sm">
                                  {t.slotEmpty} {selectedDiscoveryStrengths.length + i + 1}
                              </div>
                         ))}
@@ -762,7 +760,7 @@ export default function App() {
                          <button
                             key={s}
                             onClick={() => toggleDiscoveryStrength(s)}
-                            className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
+                            className={`px-3 py-2 rounded-full text-sm border transition-all ${
                                 selectedDiscoveryStrengths.includes(s)
                                 ? 'bg-primary-600 border-primary-500 text-white shadow-lg shadow-primary-500/20'
                                 : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'
@@ -779,7 +777,7 @@ export default function App() {
              <button 
                 onClick={saveDiscoveryToPhase1}
                 disabled={selectedDiscoveryStrengths.length === 0}
-                className="bg-primary-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-primary-500 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-primary-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-primary-500 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-base"
              >
                 {t.saveStartPhase1} <ArrowRight size={18} />
              </button>
@@ -807,7 +805,7 @@ export default function App() {
               value={str}
               onChange={(e) => updateAssessmentStrength(idx, e.target.value)}
               placeholder={`${t.strengthPlaceholder}${idx + 1}`}
-              className="bg-slate-800 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+              className="bg-slate-800 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-base"
             />
           ))}
         </div>
@@ -824,20 +822,20 @@ export default function App() {
          <div className="grid md:grid-cols-2 gap-6">
             <div>
                <label className="block text-sm font-medium text-white mb-1">{t.momentumLabel}</label>
-               <p className="text-xs text-slate-500 mb-2">{t.momentumHelp}</p>
+               <p className="text-sm text-slate-500 mb-2">{t.momentumHelp}</p>
                <textarea 
                   value={userData.internalAudit?.momentum || ''}
                   onChange={(e) => setUserData({...userData, internalAudit: {...userData.internalAudit, momentum: e.target.value}})}
-                  className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500"
+                  className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white text-base focus:ring-1 focus:ring-primary-500"
                />
             </div>
             <div>
                <label className="block text-sm font-medium text-white mb-1">{t.drainingLabel}</label>
-               <p className="text-xs text-slate-500 mb-2">{t.drainingHelp}</p>
+               <p className="text-sm text-slate-500 mb-2">{t.drainingHelp}</p>
                <textarea 
                   value={userData.internalAudit?.draining || ''}
                   onChange={(e) => setUserData({...userData, internalAudit: {...userData.internalAudit, draining: e.target.value}})}
-                  className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500"
+                  className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white text-base focus:ring-1 focus:ring-primary-500"
                />
             </div>
          </div>
@@ -851,7 +849,7 @@ export default function App() {
             <Plus size={16} /> {t.addStory}
           </button>
         </div>
-        <p className="text-sm text-slate-500 mb-6">
+        <p className="text-base text-slate-500 mb-6">
           {t.askPeople}
         </p>
         
@@ -862,7 +860,7 @@ export default function App() {
                 value={story.text}
                 onChange={(e) => updateStory(story.id, 'text', e.target.value)}
                 placeholder={t.storyPlaceholder}
-                className="w-full h-24 bg-slate-800 border border-slate-700 text-white p-4 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none"
+                className="w-full h-24 bg-slate-800 border border-slate-700 text-white p-4 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none text-base"
               />
               <button 
                 onClick={() => deleteStory(story.id)}
@@ -918,7 +916,7 @@ export default function App() {
              {t.definitions.map((def, i) => (
                <div key={i}>
                  <h4 className="font-bold text-white mb-2 text-sm uppercase tracking-wide text-primary-500">{def.term}</h4>
-                 <p className="text-xs text-slate-300 leading-relaxed">{def.def}</p>
+                 <p className="text-sm text-slate-300 leading-relaxed">{def.def}</p>
                </div>
              ))}
           </div>
@@ -932,14 +930,14 @@ export default function App() {
            <div className="flex flex-col md:flex-row gap-6 mb-4">
                {/* Phase 1 Bridge */}
                <div className="md:w-1/3 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-                   <h4 className="text-xs uppercase font-bold text-slate-500 mb-2">{t.phase1Insight}</h4>
+                   <h4 className="text-sm uppercase font-bold text-slate-500 mb-2">{t.phase1Insight}</h4>
                    <div className="flex flex-wrap gap-2">
                        {userData.assessmentStrengths.filter(Boolean).length > 0 ? (
                            userData.assessmentStrengths.filter(Boolean).map(s => (
-                               <span key={s} className="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">{s}</span>
+                               <span key={s} className="text-sm bg-slate-700 px-2 py-1 rounded text-slate-300">{s}</span>
                            ))
                        ) : (
-                           <span className="text-xs text-slate-500 italic">{t.noPhase1Strengths}</span>
+                           <span className="text-sm text-slate-500 italic">{t.noPhase1Strengths}</span>
                        )}
                    </div>
                </div>
@@ -947,7 +945,7 @@ export default function App() {
                {/* Input Area */}
                <div className="md:w-2/3">
                    <label className="block text-sm text-primary-300 mb-1">{t.yearlyThemeLabel}</label>
-                   <p className="text-xs text-slate-400 mb-3">{t.yearlyThemeHelp}</p>
+                   <p className="text-sm text-slate-400 mb-3">{t.yearlyThemeHelp}</p>
                    
                    <div className="flex gap-2">
                        <input 
@@ -994,7 +992,7 @@ export default function App() {
               </div>
               
               <div>
-                <label className="text-xs uppercase font-bold text-slate-500">{t.echoCheck}</label>
+                <label className="text-sm uppercase font-bold text-slate-500">{t.echoCheck}</label>
                 <div className="flex gap-2 mt-1">
                   {[t.yes, t.no, t.mostly].map(opt => (
                     <button
@@ -1018,20 +1016,20 @@ export default function App() {
                         placeholder={t.actionPlaceholder}
                         value={story.action || ''}
                         onChange={(e) => updateStory(story.id, 'action', e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500"
+                        className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-base text-white focus:outline-none focus:border-primary-500"
                     />
                  </div>
                  <input 
                     placeholder={t.feelingPlaceholder}
                     value={story.feeling || ''}
                     onChange={(e) => updateStory(story.id, 'feeling', e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500"
+                    className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-base text-white focus:outline-none focus:border-primary-500"
                  />
                  <input 
                     placeholder={t.patternPlaceholder}
                     value={story.pattern || ''}
                     onChange={(e) => updateStory(story.id, 'pattern', e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500"
+                    className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-base text-white focus:outline-none focus:border-primary-500"
                  />
               </div>
             </div>
@@ -1045,7 +1043,7 @@ export default function App() {
             <BatteryWarning size={20} />
             {t.boundaryCheck}
         </h3>
-        <p className="text-slate-400 mb-6 max-w-2xl">{t.boundaryCheckIntro}</p>
+        <p className="text-slate-400 mb-6 max-w-2xl text-base">{t.boundaryCheckIntro}</p>
 
         <div className="grid md:grid-cols-2 gap-8">
             {/* Context from Phase 1 */}
@@ -1067,7 +1065,7 @@ export default function App() {
                         newP[0] = e.target.value;
                         setUserData({...userData, drainingPatterns: newP});
                     }}
-                    className="w-full h-32 bg-slate-900 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-red-500 outline-none placeholder:text-slate-600"
+                    className="w-full h-32 bg-slate-900 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-red-500 outline-none placeholder:text-slate-600 text-base"
                     placeholder={t.drainingPatternHelp}
                 />
             </div>
@@ -1104,7 +1102,7 @@ export default function App() {
                 )}
 
                 <div className="mb-4">
-                     <p className="text-xs text-slate-400 mb-2" dangerouslySetInnerHTML={{ __html: t.boundaryDescription }}></p>
+                     <p className="text-sm text-slate-400 mb-2" dangerouslySetInnerHTML={{ __html: t.boundaryDescription }}></p>
                 </div>
                 <textarea 
                     value={userData.reframedBoundaries[0] || ''}
@@ -1113,7 +1111,7 @@ export default function App() {
                         newB[0] = e.target.value;
                         setUserData({...userData, reframedBoundaries: newB});
                     }}
-                    className="w-full h-32 bg-slate-900 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-green-500 outline-none placeholder:text-slate-600 mt-auto"
+                    className="w-full h-32 bg-slate-900 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-green-500 outline-none placeholder:text-slate-600 mt-auto text-base"
                     placeholder={t.reframedBoundaryHelp}
                 />
             </div>
@@ -1133,7 +1131,7 @@ export default function App() {
              <p className="text-sm text-slate-300 mb-2 leading-relaxed">
                  {t.anchorDefinition}
              </p>
-             <p className="text-xs text-primary-300 italic">
+             <p className="text-sm text-primary-300 italic">
                  {t.anchorContext}
              </p>
         </div>
@@ -1141,8 +1139,8 @@ export default function App() {
         <div className="grid md:grid-cols-2 gap-8">
             {/* Left: Candidates */}
             <div>
-                 <h4 className="text-xs uppercase font-bold text-slate-500 mb-2">{t.candidateAnchors}</h4>
-                 <p className="text-xs text-slate-500 mb-4">{t.candidateAnchorsHelp}</p>
+                 <h4 className="text-sm uppercase font-bold text-slate-500 mb-2">{t.candidateAnchors}</h4>
+                 <p className="text-sm text-slate-500 mb-4">{t.candidateAnchorsHelp}</p>
                  <div className="flex flex-wrap gap-2">
                      {candidateAnchors.map((cand, i) => (
                          <button
@@ -1167,7 +1165,7 @@ export default function App() {
                         value={anchor}
                         onChange={(e) => updateAnchor(idx, e.target.value)}
                         placeholder={`${t.anchorPlaceholder}${idx + 1}`}
-                        className="flex-1 bg-slate-800 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none font-semibold"
+                        className="flex-1 bg-slate-800 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none font-semibold text-base"
                       />
                       {anchor && (
                           <button onClick={() => updateAnchor(idx, '')} className="text-slate-600 hover:text-red-400">
@@ -1209,21 +1207,21 @@ export default function App() {
                 </button>
                 <div className="flex flex-col md:flex-row gap-4 mb-4">
                     <div className="flex-1">
-                        <label className="block text-xs uppercase font-bold text-slate-500 mb-1">{t.territory}</label>
+                        <label className="block text-sm uppercase font-bold text-slate-500 mb-1">{t.territory}</label>
                         <select 
                             value={shift.territory}
                             onChange={(e) => updateShift(shift.id, 'territory', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 text-white rounded p-2 focus:ring-1 focus:ring-primary-500"
+                            className="w-full bg-slate-800 border border-slate-700 text-white rounded p-2 focus:ring-1 focus:ring-primary-500 text-base"
                         >
                              {TERRITORIES.map(tr => <option key={tr} value={tr}>{(t.territoryOptions as any)[tr] || tr}</option>)}
                         </select>
                     </div>
                     <div className="flex-1">
-                        <label className="block text-xs uppercase font-bold text-slate-500 mb-1">{t.poweringAnchor}</label>
+                        <label className="block text-sm uppercase font-bold text-slate-500 mb-1">{t.poweringAnchor}</label>
                         <select 
                              value={shift.anchorId}
                              onChange={(e) => updateShift(shift.id, 'anchorId', e.target.value)}
-                             className="w-full bg-slate-800 border border-slate-700 text-white rounded p-2 focus:ring-1 focus:ring-primary-500"
+                             className="w-full bg-slate-800 border border-slate-700 text-white rounded p-2 focus:ring-1 focus:ring-primary-500 text-base"
                         >
                             <option value="">{t.selectAnchor}</option>
                             {userData.coreAnchors.filter(Boolean).map(a => <option key={a} value={a}>{a}</option>)}
@@ -1232,11 +1230,11 @@ export default function App() {
                 </div>
                 <div>
                     <div className="flex justify-between items-center mb-1">
-                        <label className="block text-xs uppercase font-bold text-primary-400">{t.shiftAction}</label>
+                        <label className="block text-sm uppercase font-bold text-primary-400">{t.shiftAction}</label>
                         <button 
                              onClick={() => handleSuggestShifts(shift.id, shift.territory, shift.anchorId)}
                              disabled={suggestingShiftId === shift.id || !shift.territory || !shift.anchorId}
-                             className="text-xs flex items-center gap-1 text-primary-400 hover:text-primary-300 disabled:opacity-50"
+                             className="text-sm flex items-center gap-1 text-primary-400 hover:text-primary-300 disabled:opacity-50"
                         >
                              {suggestingShiftId === shift.id ? <Loader2 className="animate-spin" size={14}/> : <Sparkles size={14} />}
                              {t.suggestIdeas}
@@ -1263,7 +1261,7 @@ export default function App() {
                         value={shift.practice}
                         onChange={(e) => updateShift(shift.id, 'practice', e.target.value)}
                         placeholder={t.practicePlaceholder}
-                        className="w-full bg-slate-800 border border-slate-700 text-white rounded p-3 focus:ring-2 focus:ring-primary-500 outline-none"
+                        className="w-full bg-slate-800 border border-slate-700 text-white rounded p-3 focus:ring-2 focus:ring-primary-500 outline-none text-base"
                     />
                 </div>
             </div>
@@ -1338,7 +1336,7 @@ export default function App() {
                             <select 
                                 value={todayLog.anchor}
                                 onChange={(e) => setTodayLog({...todayLog, anchor: e.target.value})}
-                                className="w-full bg-slate-800 border border-slate-700 text-white rounded p-2"
+                                className="w-full bg-slate-800 border border-slate-700 text-white rounded p-2 text-base"
                             >
                                 <option value="">{t.selectAnchor}</option>
                                 {userData.coreAnchors.filter(Boolean).map(a => <option key={a} value={a}>{a}</option>)}
@@ -1349,13 +1347,13 @@ export default function App() {
                             <textarea 
                                 value={todayLog.reflection}
                                 onChange={(e) => setTodayLog({...todayLog, reflection: e.target.value})}
-                                className="w-full h-32 bg-slate-800 border border-slate-700 text-white rounded p-3 resize-none focus:ring-1 focus:ring-primary-500"
+                                className="w-full h-32 bg-slate-800 border border-slate-700 text-white rounded p-3 resize-none focus:ring-1 focus:ring-primary-500 text-base"
                             />
                         </div>
                         
                         {/* Energy Slider (Gamification) */}
                         <div>
-                            <div className="flex justify-between text-xs text-slate-500 mb-2">
+                            <div className="flex justify-between text-sm text-slate-500 mb-2">
                                 <span className="flex items-center gap-1"><BatteryWarning size={12}/> {t.energyLow}</span>
                                 <span className="uppercase font-bold text-slate-400">{t.energyLabel}</span>
                                 <span className="flex items-center gap-1 text-yellow-500"><Zap size={12}/> {t.energyHigh}</span>
@@ -1422,17 +1420,17 @@ export default function App() {
                     {userData.dailyLogs.length > 0 ? userData.dailyLogs.slice(0, 5).map(log => (
                         <div key={log.id} className="border-b border-slate-800 last:border-0 pb-4 last:pb-0">
                             <div className="flex justify-between items-start mb-1">
-                                <span className="text-primary-400 font-medium text-sm flex items-center gap-2">
+                                <span className="text-primary-400 font-medium text-base flex items-center gap-2">
                                     {log.anchorUsed}
-                                    <span className="text-xs text-slate-500 font-normal px-2 py-0.5 bg-slate-800 rounded-full flex items-center gap-1">
+                                    <span className="text-sm text-slate-500 font-normal px-2 py-0.5 bg-slate-800 rounded-full flex items-center gap-1">
                                         <Zap size={10} className={log.energyLevel >= 4 ? "text-yellow-500" : "text-slate-500"}/> {log.energyLevel}/5
                                     </span>
                                 </span>
-                                <span className="text-slate-500 text-xs">{new Date(log.date).toLocaleDateString()}</span>
+                                <span className="text-slate-500 text-sm">{new Date(log.date).toLocaleDateString()}</span>
                             </div>
                             <p className="text-slate-300 text-sm mb-2">{log.reflection}</p>
                             {log.aiFeedback && (
-                                <div className="bg-primary-900/20 p-2 rounded text-xs text-primary-300 italic flex items-start gap-2">
+                                <div className="bg-primary-900/20 p-2 rounded text-sm text-primary-300 italic flex items-start gap-2">
                                     <Sparkles size={12} className="mt-0.5 flex-shrink-0" />
                                     "{log.aiFeedback}"
                                 </div>
@@ -1499,15 +1497,15 @@ export default function App() {
                     <div className="grid grid-cols-3 gap-4">
                          <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center flex flex-col justify-center">
                              <div className="text-2xl font-bold text-white">{totalLogs}</div>
-                             <div className="text-[10px] text-slate-500 uppercase font-bold">{t.totalEntries}</div>
+                             <div className="text-xs text-slate-500 uppercase font-bold">{t.totalEntries}</div>
                          </div>
                          <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center flex flex-col justify-center">
                              <div className="text-2xl font-bold text-primary-400">{avgEnergy}</div>
-                             <div className="text-[10px] text-slate-500 uppercase font-bold">{t.avgEnergy}</div>
+                             <div className="text-xs text-slate-500 uppercase font-bold">{t.avgEnergy}</div>
                          </div>
                          <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center flex flex-col justify-center">
                              <div className="text-sm font-bold text-white truncate px-1">{topAnchor}</div>
-                             <div className="text-[10px] text-slate-500 uppercase font-bold">{t.topAnchor}</div>
+                             <div className="text-xs text-slate-500 uppercase font-bold">{t.topAnchor}</div>
                          </div>
                     </div>
 
@@ -1527,12 +1525,12 @@ export default function App() {
                </div>
 
                {/* Key Moments Scrollable List */}
-               <h4 className="text-xs uppercase font-bold text-slate-500 mb-2">{t.keyMoments}</h4>
+               <h4 className="text-sm uppercase font-bold text-slate-500 mb-2">{t.keyMoments}</h4>
                <div className="bg-slate-800/50 rounded-lg border border-slate-700 max-h-48 overflow-y-auto custom-scrollbar">
                    {recentLogs.length > 0 ? recentLogs.map((log, i) => (
                        <div key={i} className="p-3 border-b border-slate-700/50 last:border-0 text-sm">
                            <div className="flex justify-between mb-1">
-                               <span className="text-primary-400 font-medium">{log.anchorUsed}</span>
+                               <span className="text-primary-400 font-medium text-base">{log.anchorUsed}</span>
                                <span className="text-slate-500 text-xs">{new Date(log.date).toLocaleDateString()}</span>
                            </div>
                            <p className="text-slate-300 mb-1">{log.reflection}</p>
@@ -1561,7 +1559,7 @@ export default function App() {
                </div>
 
                <div>
-                   <label className="block text-sm font-bold text-primary-400 mb-2">{t.themeLabel}</label>
+                   <label className="block text-base font-bold text-primary-400 mb-2">{t.themeLabel}</label>
                    <input 
                       value={weeklyData.theme}
                       onChange={(e) => setWeeklyData({...weeklyData, theme: e.target.value})}
@@ -1571,20 +1569,20 @@ export default function App() {
                </div>
 
                <div>
-                   <label className="block text-sm font-bold text-white mb-2">{t.winsLabel}</label>
+                   <label className="block text-base font-bold text-white mb-2">{t.winsLabel}</label>
                    <textarea 
                       value={weeklyData.wins}
                       onChange={(e) => setWeeklyData({...weeklyData, wins: e.target.value})}
-                      className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500" 
+                      className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500 text-base" 
                    />
                </div>
 
                <div>
-                   <label className="block text-sm font-bold text-white mb-2">{t.challengesLabel}</label>
+                   <label className="block text-base font-bold text-white mb-2">{t.challengesLabel}</label>
                    <textarea 
                       value={weeklyData.challenges}
                       onChange={(e) => setWeeklyData({...weeklyData, challenges: e.target.value})}
-                      className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500" 
+                      className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500 text-base" 
                    />
                </div>
 
@@ -1641,27 +1639,27 @@ export default function App() {
                <div className="grid grid-cols-3 gap-4 mb-6">
                     <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 text-center">
                         <div className="text-2xl font-bold text-white">{logCount}</div>
-                        <div className="text-xs text-slate-500 uppercase font-semibold">{t.totalLogs}</div>
+                        <div className="text-sm text-slate-500 uppercase font-semibold">{t.totalLogs}</div>
                     </div>
                     <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 text-center">
                         <div className="text-2xl font-bold text-primary-400">{avgEnergy}</div>
-                        <div className="text-xs text-slate-500 uppercase font-semibold">{t.avgEnergy}</div>
+                        <div className="text-sm text-slate-500 uppercase font-semibold">{t.avgEnergy}</div>
                     </div>
                     <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 text-center">
                         <div className="text-lg font-bold text-white truncate px-1">{topAnchor}</div>
-                        <div className="text-xs text-slate-500 uppercase font-semibold">{t.topAnchor}</div>
+                        <div className="text-sm text-slate-500 uppercase font-semibold">{t.topAnchor}</div>
                     </div>
                </div>
 
                {/* Recent Context List */}
                <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                    {userData.weeklyReflections.slice(0, 5).map((w, i) => (
-                       <div key={i} className="text-xs text-slate-400 border-l-2 border-slate-700 pl-3 py-1">
+                       <div key={i} className="text-sm text-slate-400 border-l-2 border-slate-700 pl-3 py-1">
                            <span className="text-slate-500 block mb-0.5">{new Date(w.date).toLocaleDateString()}</span>
                            <span className="text-slate-300">"{w.focusForNextWeek}"</span>
                        </div>
                    ))}
-                   {userData.weeklyReflections.length === 0 && <p className="text-xs text-slate-600 italic">{t.noWeeklyReflections}</p>}
+                   {userData.weeklyReflections.length === 0 && <p className="text-sm text-slate-600 italic">{t.noWeeklyReflections}</p>}
                </div>
           </div>
 
@@ -1669,39 +1667,39 @@ export default function App() {
                
                <div className="grid md:grid-cols-2 gap-8">
                    <div>
-                       <label className="block text-sm font-bold text-white mb-1">{t.q_shifted}</label>
-                       <p className="text-xs text-slate-500 mb-2">{t.q_shifted_help}</p>
+                       <label className="block text-base font-bold text-white mb-1">{t.q_shifted}</label>
+                       <p className="text-sm text-slate-500 mb-2">{t.q_shifted_help}</p>
                        <textarea 
                            value={quarterlyData.shifted}
                            onChange={(e) => setQuarterlyData({...quarterlyData, shifted: e.target.value})}
-                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500" 
+                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500 text-base" 
                        />
                    </div>
                    <div>
-                       <label className="block text-sm font-bold text-white mb-1">{t.q_flow}</label>
-                       <p className="text-xs text-slate-500 mb-2">{t.q_flow_help}</p>
+                       <label className="block text-base font-bold text-white mb-1">{t.q_flow}</label>
+                       <p className="text-sm text-slate-500 mb-2">{t.q_flow_help}</p>
                        <textarea 
                            value={quarterlyData.creatingFlow}
                            onChange={(e) => setQuarterlyData({...quarterlyData, creatingFlow: e.target.value})}
-                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500" 
+                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500 text-base" 
                        />
                    </div>
                    <div>
-                       <label className="block text-sm font-bold text-white mb-1">{t.q_adjust}</label>
-                       <p className="text-xs text-slate-500 mb-2">{t.q_adjust_help}</p>
+                       <label className="block text-base font-bold text-white mb-1">{t.q_adjust}</label>
+                       <p className="text-sm text-slate-500 mb-2">{t.q_adjust_help}</p>
                        <textarea 
                            value={quarterlyData.needsAdjustment}
                            onChange={(e) => setQuarterlyData({...quarterlyData, needsAdjustment: e.target.value})}
-                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500" 
+                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500 text-base" 
                        />
                    </div>
                    <div>
-                       <label className="block text-sm font-bold text-white mb-1">{t.q_emerging}</label>
-                       <p className="text-xs text-slate-500 mb-2">{t.q_emerging_help}</p>
+                       <label className="block text-base font-bold text-white mb-1">{t.q_emerging}</label>
+                       <p className="text-sm text-slate-500 mb-2">{t.q_emerging_help}</p>
                        <textarea 
                            value={quarterlyData.emerging}
                            onChange={(e) => setQuarterlyData({...quarterlyData, emerging: e.target.value})}
-                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500" 
+                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded p-3 text-white focus:ring-1 focus:ring-primary-500 text-base" 
                        />
                    </div>
                </div>
@@ -1727,7 +1725,7 @@ export default function App() {
                    
                    <div className="space-y-6">
                        <div>
-                           <h4 className="text-xs uppercase font-bold text-indigo-300 mb-2">{t.themesObserved}</h4>
+                           <h4 className="text-sm uppercase font-bold text-indigo-300 mb-2">{t.themesObserved}</h4>
                            <ul className="space-y-2">
                                {latestQuarterlyAnalysis.themes.map((theme, i) => (
                                    <li key={i} className="flex items-start gap-2 text-slate-200 text-sm">
@@ -1738,14 +1736,14 @@ export default function App() {
                        </div>
                        
                        <div>
-                           <h4 className="text-xs uppercase font-bold text-green-400 mb-2">{t.growthTrajectory}</h4>
-                           <p className="text-slate-200 text-sm leading-relaxed border-l-2 border-green-500/50 pl-4">
+                           <h4 className="text-sm uppercase font-bold text-green-400 mb-2">{t.growthTrajectory}</h4>
+                           <p className="text-slate-200 text-base leading-relaxed border-l-2 border-green-500/50 pl-4">
                                {latestQuarterlyAnalysis.growthTrajectory}
                            </p>
                        </div>
 
                        <div>
-                           <h4 className="text-xs uppercase font-bold text-yellow-400 mb-2">{t.nextQuarterFocus}</h4>
+                           <h4 className="text-sm uppercase font-bold text-yellow-400 mb-2">{t.nextQuarterFocus}</h4>
                            <div className="bg-slate-800/50 p-4 rounded-lg border border-yellow-500/30 text-white font-medium text-lg">
                                {latestQuarterlyAnalysis.nextQuarterFocus}
                            </div>
@@ -1761,7 +1759,7 @@ export default function App() {
                       {userData.quarterlyCheckIns.map(q => (
                           <div key={q.id} className="bg-slate-900 border border-slate-800 p-4 rounded-lg hover:border-slate-600 transition-colors">
                               <div className="flex justify-between items-start mb-2">
-                                  <div className="text-xs text-slate-500">{new Date(q.date).toLocaleDateString()}</div>
+                                  <div className="text-sm text-slate-500">{new Date(q.date).toLocaleDateString()}</div>
                                   {q.aiAnalysis && <span className="bg-indigo-900/50 text-indigo-300 text-[10px] px-2 py-0.5 rounded border border-indigo-500/30">{t.analyzedTag}</span>}
                               </div>
                               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1770,7 +1768,7 @@ export default function App() {
                               </div>
                               {q.aiAnalysis && (
                                   <div className="mt-3 pt-3 border-t border-slate-800">
-                                      <p className="text-xs text-yellow-500 font-medium">Focus: {q.aiAnalysis.nextQuarterFocus}</p>
+                                      <p className="text-sm text-yellow-500 font-medium">Focus: {q.aiAnalysis.nextQuarterFocus}</p>
                                   </div>
                               )}
                           </div>
