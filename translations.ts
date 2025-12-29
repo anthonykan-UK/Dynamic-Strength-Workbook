@@ -288,7 +288,8 @@ export const TRANSLATIONS = {
       systemReady: "System ready.",
       dailyLogged: "Momentum Captured!",
       quarterlySaved: "Quarterly check-in saved.",
-      missingDrain: "Define a draining pattern first."
+      missingDrain: "Define a draining pattern first.",
+      jumpingToPhase1: "Jumping to Phase 1 to review your new insights."
     }
   },
   'zh-HK': {
@@ -577,7 +578,8 @@ export const TRANSLATIONS = {
       systemReady: "系統就緒。",
       dailyLogged: "動力已捕捉！",
       quarterlySaved: "季度檢視已儲存。",
-      missingDrain: "請先定義耗能模式。"
+      missingDrain: "請先定義耗能模式。",
+      jumpingToPhase1: "正在跳轉至第一階段以檢視你的新洞察。"
     }
   }
 };

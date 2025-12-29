@@ -1810,6 +1810,9 @@ export default function App() {
         language={language} 
         triggerPrompt={coachTrigger}
         onCloseTrigger={() => setCoachTrigger(undefined)}
+        currentView={view}
+        onViewChange={setView}
+        onNotify={showNotification}
       />
     </Layout>
   );

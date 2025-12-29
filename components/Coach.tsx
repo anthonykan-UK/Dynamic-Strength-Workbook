@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { UserData, Language, Story, TERRITORIES } from '../types';
+import { UserData, Language, Story, TERRITORIES, ViewState } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { streamCoachResponse } from '../services/ai';
 import { MessageCircle, X, Send, Sparkles, Loader2, Save, Check, Award, BookOpen, Anchor, Compass, Scale, ShieldAlert, BatteryWarning } from 'lucide-react';
@@ -13,6 +13,10 @@ interface CoachProps {
   language: Language;
   triggerPrompt?: string; // Allow external triggering
   onCloseTrigger?: () => void;
+  // Navigation Props for Smart Close
+  currentView: ViewState;
+  onViewChange: (view: ViewState) => void;
+  onNotify: (msg: string) => void;
 }
 
 interface ChatMessage {
@@ -26,7 +30,7 @@ interface ChatMessage {
   };
 }
 
-export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, triggerPrompt, onCloseTrigger }) => {
+export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, triggerPrompt, onCloseTrigger, currentView, onViewChange, onNotify }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const t = TRANSLATIONS[language];
@@ -35,6 +39,9 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
   
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Track if user saved anything in this session
+  const [hasSavedData, setHasSavedData] = useState(false);
 
   // Initialize or handle external trigger
   useEffect(() => {
@@ -62,11 +69,22 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
     scrollToBottom();
   }, [messages, isOpen]);
 
+  const handleClose = () => {
+      setIsOpen(false);
+      // Smart Close: If user saved data in early stages, jump to Phase 1
+      if (hasSavedData && (currentView === 'welcome' || currentView === 'discovery')) {
+          onViewChange('phase1');
+          onNotify(t.notifications.jumpingToPhase1);
+      }
+      setHasSavedData(false); // Reset session tracking
+  };
+
   const handleToolAction = (index: number, action: 'save' | 'dismiss') => {
       const msg = messages[index];
       if (!msg.toolCall) return;
 
       if (action === 'save') {
+          setHasSavedData(true); // Mark session as productive
           const { name, args } = msg.toolCall;
           
           // Execute the update based on tool name
@@ -339,7 +357,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
           <Sparkles size={20} />
           <h3 className="font-semibold">Strength Coach</h3>
         </div>
-        <button onClick={() => setIsOpen(false)} className="hover:bg-primary-500 p-1 rounded">
+        <button onClick={handleClose} className="hover:bg-primary-500 p-1 rounded">
           <X size={20} />
         </button>
       </div>
