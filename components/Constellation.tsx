@@ -40,7 +40,8 @@ export const Constellation: React.FC<ConstellationProps> = ({ userData, language
         // Mobile: Vertical Stack (Totem). Desktop: Circular Orbit.
         const CENTER_X = isMobile ? containerWidth / 2 : 300;
         const ANCHOR_SPACING = isMobile ? 180 : 0; // Vertical space between anchors on mobile
-        const BASE_HEIGHT = isMobile ? (anchors.length * ANCHOR_SPACING) + 150 : 400;
+        // Increased buffer at bottom for the popover on the last item
+        const BASE_HEIGHT = isMobile ? (anchors.length * ANCHOR_SPACING) + 350 : 500;
         
         const anchorNodes = anchors.map((a, i) => {
             let x, y;
@@ -177,7 +178,6 @@ export const Constellation: React.FC<ConstellationProps> = ({ userData, language
                          const isActive = activeNodeId === node.id;
                          const isRelated = activeNodeId && !isAnchor && node.connectedToId === activeNodeId;
                          
-                         // Determine visual state
                          const isHighlighted = isActive || (isAnchor && activeNodeId && nodes.find(n => n.id === activeNodeId)?.connectedToId === node.id);
 
                          return (
@@ -189,28 +189,28 @@ export const Constellation: React.FC<ConstellationProps> = ({ userData, language
                                     handleNodeClick(node.id);
                                 }}
                              >
-                                 {/* Invisible Hit Area for easier tapping on mobile */}
-                                 <circle cx={node.x} cy={node.y} r={25} fill="transparent" />
+                                 {/* Invisible Hit Area - Increased size for easier tapping */}
+                                 <circle cx={node.x} cy={node.y} r={45} fill="transparent" />
 
                                  {isAnchor ? (
                                      <>
-                                        {/* Glow effect */}
                                         <circle 
-                                            cx={node.x} cy={node.y} r={isActive ? 20 : 0} 
+                                            cx={node.x} cy={node.y} r={isActive ? 25 : 0} 
                                             fill="#fbbf24" opacity="0.1" className="animate-pulse" 
                                         />
+                                        {/* Main Anchor Circle - Larger */}
                                         <circle 
-                                            cx={node.x} cy={node.y} r={isActive ? 8 : 6} 
+                                            cx={node.x} cy={node.y} r={isActive ? 12 : 9} 
                                             fill="#fbbf24" 
                                             stroke={isActive ? "#fff" : "none"}
                                             strokeWidth={2}
                                             className="transition-all duration-300 shadow-glow"
                                         />
                                         <text 
-                                            x={node.x} y={node.y + 24} 
+                                            x={node.x} y={node.y + 30} 
                                             textAnchor="middle" 
                                             fill={isActive ? "#fbbf24" : "#94a3b8"}
-                                            fontSize={isMobile ? 14 : 12} // Larger font on mobile
+                                            fontSize={isMobile ? 14 : 12}
                                             fontWeight={isActive ? "bold" : "normal"}
                                             className="uppercase tracking-wider transition-all duration-300 select-none pointer-events-none"
                                             style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.8)' }}
@@ -220,14 +220,14 @@ export const Constellation: React.FC<ConstellationProps> = ({ userData, language
                                      </>
                                  ) : (
                                      <>
+                                        {/* Story Circle - Larger */}
                                         <circle 
-                                            cx={node.x} cy={node.y} r={isActive ? 6 : 4} 
+                                            cx={node.x} cy={node.y} r={isActive ? 9 : 6} 
                                             fill={isActive ? "#fff" : "#64748b"}
                                             className="transition-colors duration-300"
                                         />
-                                        {/* Mobile: Hide story labels in SVG to reduce clutter, show in panel instead */}
                                         {!isMobile && isActive && (
-                                            <text x={node.x + 10} y={node.y + 4} fill="#cbd5e1" fontSize="10" className="pointer-events-none">
+                                            <text x={node.x + 12} y={node.y + 4} fill="#cbd5e1" fontSize="10" className="pointer-events-none">
                                                 {node.name}
                                             </text>
                                         )}
@@ -237,46 +237,55 @@ export const Constellation: React.FC<ConstellationProps> = ({ userData, language
                          );
                      })}
                  </svg>
-             </div>
 
-             {/* Detail Panel Overlay (Mobile Friendly) */}
-             {activeNodeData && (
-                 <div className="absolute bottom-4 left-4 right-4 bg-slate-800/95 backdrop-blur-md border border-slate-600 p-4 rounded-xl shadow-2xl animate-fade-in-up z-20">
-                     <button 
-                        onClick={(e) => { e.stopPropagation(); setActiveNodeId(null); }}
-                        className="absolute top-2 right-2 text-slate-400 hover:text-white p-1"
+                 {/* Detail Panel Overlay - Positioned Relative to Node */}
+                 {activeNodeData && (
+                     <div 
+                        className="absolute bg-slate-800/95 backdrop-blur-md border border-slate-600 p-4 rounded-xl shadow-2xl animate-fade-in-up z-20"
+                        style={{
+                            top: activeNodeData.y + 45, // Adjusted for larger nodes
+                            left: isMobile ? '10px' : '50%',
+                            right: isMobile ? '10px' : 'auto',
+                            width: isMobile ? 'auto' : '320px',
+                            transform: isMobile ? 'none' : 'translateX(-50%)',
+                        }}
                      >
-                         <X size={16} />
-                     </button>
-                     
-                     <div className="pr-6">
-                         <div className="flex items-center gap-2 mb-2">
-                             {activeNodeData.type === 'anchor' ? (
-                                 <Anchor size={16} className="text-yellow-400" />
-                             ) : (
-                                 <BookOpen size={16} className="text-blue-400" />
+                         <button 
+                            onClick={(e) => { e.stopPropagation(); setActiveNodeId(null); }}
+                            className="absolute top-2 right-2 text-slate-400 hover:text-white p-1"
+                         >
+                             <X size={16} />
+                         </button>
+                         
+                         <div className="pr-6">
+                             <div className="flex items-center gap-2 mb-2">
+                                 {activeNodeData.type === 'anchor' ? (
+                                     <Anchor size={16} className="text-yellow-400" />
+                                 ) : (
+                                     <BookOpen size={16} className="text-blue-400" />
+                                 )}
+                                 <span className={`text-xs font-bold uppercase tracking-wider ${activeNodeData.type === 'anchor' ? 'text-yellow-400' : 'text-blue-400'}`}>
+                                     {activeNodeData.type === 'anchor' ? 'Core Anchor' : 'Evidence Story'}
+                                 </span>
+                             </div>
+                             
+                             <h4 className="text-white font-bold text-lg mb-1">{activeNodeData.name || "Untitled"}</h4>
+                             
+                             {activeNodeData.type === 'story' && (
+                                 <p className="text-slate-300 text-sm leading-relaxed max-h-40 overflow-y-auto">
+                                     "{activeNodeData.text}"
+                                 </p>
                              )}
-                             <span className={`text-xs font-bold uppercase tracking-wider ${activeNodeData.type === 'anchor' ? 'text-yellow-400' : 'text-blue-400'}`}>
-                                 {activeNodeData.type === 'anchor' ? 'Core Anchor' : 'Evidence Story'}
-                             </span>
+                             
+                             {activeNodeData.type === 'anchor' && (
+                                 <p className="text-slate-400 text-xs italic">
+                                     {nodes.filter(n => n.connectedToId === activeNodeData.id).length} stories connected to this anchor.
+                                 </p>
+                             )}
                          </div>
-                         
-                         <h4 className="text-white font-bold text-lg mb-1">{activeNodeData.name || "Untitled"}</h4>
-                         
-                         {activeNodeData.type === 'story' && (
-                             <p className="text-slate-300 text-sm leading-relaxed max-h-32 overflow-y-auto">
-                                 "{activeNodeData.text}"
-                             </p>
-                         )}
-                         
-                         {activeNodeData.type === 'anchor' && (
-                             <p className="text-slate-400 text-xs italic">
-                                 {nodes.filter(n => n.connectedToId === activeNodeData.id).length} stories connected to this anchor.
-                             </p>
-                         )}
                      </div>
-                 </div>
-             )}
+                 )}
+             </div>
 
              {/* Tap background to deselect */}
              {activeNodeId && (
