@@ -401,13 +401,15 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
             placeholder={t.askGuidance}
             className="w-full bg-slate-900 border border-slate-700 rounded-full py-3 px-4 pr-12 text-base text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
           />
-          <button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || isLoading}
-            className="absolute right-2 top-2 p-1.5 bg-primary-600 rounded-full text-white hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send size={16} />
-          </button>
+          <div className="absolute right-2 top-2 flex items-center gap-1">
+             <button
+                onClick={() => handleSend()}
+                disabled={!input.trim() || isLoading}
+                className="p-2 bg-primary-600 rounded-full text-white hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed w-8 h-8 flex items-center justify-center"
+             >
+                <Send size={14} />
+             </button>
+          </div>
         </div>
       </div>
     </div>

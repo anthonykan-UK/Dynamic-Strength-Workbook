@@ -1,5 +1,5 @@
 
-export type ViewState = 'welcome' | 'discovery' | 'phase1' | 'phase2' | 'phase3' | 'dashboard' | 'weekly' | 'quarterly';
+export type ViewState = 'welcome' | 'discovery' | 'phase1' | 'phase2' | 'phase3' | 'dashboard' | 'weekly' | 'quarterly' | 'settings';
 export type Language = 'en-GB' | 'zh-HK';
 
 export interface Story {

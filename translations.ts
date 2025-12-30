@@ -15,6 +15,7 @@ export const TRANSLATIONS = {
     dashboard: "Daily Routine",
     weekly: "Weekly Reflection",
     quarterly: "Quarterly Check-In",
+    settings: "Settings & Data",
     
     // Welcome
     welcomeTitle: "Build Strength that Multiplies",
@@ -223,6 +224,9 @@ export const TRANSLATIONS = {
     themesObserved: "Themes Observed",
     growthTrajectory: "Growth Trajectory",
     nextQuarterFocus: "Next Quarter Focus",
+    trendLine: "Energy Trend (90 Days)",
+    highEnergyReel: "High Energy Reel",
+    highEnergyDesc: "Moments where you felt most alive (Energy 4-5/5)",
     
     q_shifted: "1. What shifted?",
     q_shifted_help: "What improved in your decisions or impacts? What evidence shows growing capability?",
@@ -237,6 +241,21 @@ export const TRANSLATIONS = {
     pastCheckIns: "Past Check-Ins",
     analyzedTag: "Analyzed",
     noPastCheckIns: "No past check-ins recorded.",
+
+    // Settings & Export
+    settingsTitle: "Settings & Data Vault",
+    dataVault: "Data Vault",
+    backupTitle: "Backup & Restore",
+    backupDesc: "Your data is stored only on this device. Download a backup regularly to keep it safe.",
+    downloadBackup: "Download JSON Backup",
+    restoreBackup: "Restore from JSON",
+    restoreWarning: "Warning: Restoring will overwrite all current data.",
+    manifestoTitle: "The Strength Manifesto",
+    manifestoDesc: "Generate a readable summary of your Profile, Anchors, and Stories.",
+    copyManifesto: "Copy to Clipboard",
+    manifestoCopied: "Manifesto copied!",
+    importSuccess: "Data imported successfully.",
+    importError: "Invalid file format.",
 
     // Prompts
     drainPrompts: [
@@ -315,6 +334,7 @@ export const TRANSLATIONS = {
     dashboard: "每日日常",
     weekly: "每週反思",
     quarterly: "季度檢視",
+    settings: "設定與數據庫",
     
     // Welcome
     welcomeTitle: "建立倍增的優勢",
@@ -523,6 +543,9 @@ export const TRANSLATIONS = {
     themesObserved: "觀察到的主題",
     growthTrajectory: "成長軌跡",
     nextQuarterFocus: "下季焦點",
+    trendLine: "能量趨勢 (90 天)",
+    highEnergyReel: "高能量片段",
+    highEnergyDesc: "你感覺最有活力的時刻 (能量 4-5/5)",
 
     q_shifted: "1. 什麼改變了？",
     q_shifted_help: "你的決定或影響有什麼改善？有什麼證據顯示能力增長？",
@@ -537,6 +560,21 @@ export const TRANSLATIONS = {
     pastCheckIns: "過往檢視",
     analyzedTag: "已分析",
     noPastCheckIns: "無過往檢視記錄。",
+
+    // Settings
+    settingsTitle: "設定與數據庫",
+    dataVault: "數據庫",
+    backupTitle: "備份與還原",
+    backupDesc: "你的數據僅存儲在此設備上。請定期下載備份以確保安全。",
+    downloadBackup: "下載 JSON 備份",
+    restoreBackup: "從 JSON 還原",
+    restoreWarning: "警告：還原將覆蓋當前所有數據。",
+    manifestoTitle: "優勢宣言",
+    manifestoDesc: "生成你的個人檔案、錨點和故事的可讀摘要。",
+    copyManifesto: "複製到剪貼簿",
+    manifestoCopied: "宣言已複製！",
+    importSuccess: "數據導入成功。",
+    importError: "無效的文件格式。",
 
     // Prompts
     drainPrompts: [

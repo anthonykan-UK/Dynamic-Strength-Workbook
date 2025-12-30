@@ -14,7 +14,8 @@ import {
   X,
   Search,
   Globe,
-  HelpCircle
+  HelpCircle,
+  Settings
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -30,12 +31,12 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
   const [showHelp, setShowHelp] = useState(false);
   const t = TRANSLATIONS[language];
 
-  // Check for first-time visitor
+  // Check for first-time visitor - RENAMED KEY to avoid collision
   useEffect(() => {
-    const hasSeenTutorial = localStorage.getItem('inkspire_tutorial_seen');
+    const hasSeenTutorial = localStorage.getItem('dsw_tutorial_seen');
     if (!hasSeenTutorial) {
         setShowHelp(true);
-        localStorage.setItem('inkspire_tutorial_seen', 'true');
+        localStorage.setItem('dsw_tutorial_seen', 'true');
     }
   }, []);
 
@@ -112,6 +113,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
           <NavItem view="dashboard" icon={LayoutDashboard} label={t.dashboard} />
           <NavItem view="weekly" icon={Calendar} label={t.weekly} />
           <NavItem view="quarterly" icon={BarChart} label={t.quarterly} />
+          
+          <div className="my-4 border-t border-slate-800"></div>
+          <NavItem view="settings" icon={Settings} label={t.settings} />
         </nav>
         
         {/* Help Button */}
@@ -148,6 +152,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
             <NavItem view="dashboard" icon={LayoutDashboard} label={t.dashboard} />
             <NavItem view="weekly" icon={Calendar} label={t.weekly} />
             <NavItem view="quarterly" icon={BarChart} label={t.quarterly} />
+            <NavItem view="settings" icon={Settings} label={t.settings} />
             <div className="pt-4 mt-4 border-t border-slate-800">
                 <button 
                     onClick={() => { setShowHelp(true); setMobileMenuOpen(false); }}

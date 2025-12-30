@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   UserData, 
@@ -53,45 +54,58 @@ import {
   Activity,
   User,
   MessageCircle,
-  Compass
+  Compass,
+  Download,
+  Upload,
+  Copy,
+  Database
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from 'recharts';
 
 export default function App() {
   // --- State ---
   const [userData, setUserData] = useState<UserData>(() => {
-    const saved = localStorage.getItem('inkspire_strength_data');
-    if (!saved) return INITIAL_USER_DATA;
-    
-    try {
-        const parsed = JSON.parse(saved);
-        // Robust Deep Merge: Ensures nested objects/arrays exist even if saved data is old/partial
-        return {
-            ...INITIAL_USER_DATA,
-            ...parsed,
-            internalAudit: { ...INITIAL_USER_DATA.internalAudit, ...(parsed.internalAudit || {}) },
-            assessmentStrengths: parsed.assessmentStrengths || INITIAL_USER_DATA.assessmentStrengths,
-            externalStories: parsed.externalStories || INITIAL_USER_DATA.externalStories,
-            drainingPatterns: parsed.drainingPatterns || INITIAL_USER_DATA.drainingPatterns,
-            reframedBoundaries: parsed.reframedBoundaries || INITIAL_USER_DATA.reframedBoundaries,
-            coreAnchors: parsed.coreAnchors || INITIAL_USER_DATA.coreAnchors,
-            shifts: parsed.shifts || INITIAL_USER_DATA.shifts,
-            dailyLogs: parsed.dailyLogs || INITIAL_USER_DATA.dailyLogs,
-            weeklyReflections: parsed.weeklyReflections || INITIAL_USER_DATA.weeklyReflections,
-            quarterlyCheckIns: parsed.quarterlyCheckIns || INITIAL_USER_DATA.quarterlyCheckIns,
-            // Ensure boolean toggles are respected if they exist, otherwise default
-            useBNODeck: parsed.useBNODeck !== undefined ? parsed.useBNODeck : INITIAL_USER_DATA.useBNODeck
-        };
-    } catch(e) {
-        console.error("Data parse error, resetting to default.", e);
-        return INITIAL_USER_DATA;
+    // 1. Try New Key
+    const saved = localStorage.getItem('dsw_strength_data');
+    if (saved) {
+        try {
+             return JSON.parse(saved);
+        } catch(e) { console.error("Parse error", e); return INITIAL_USER_DATA; }
     }
+
+    // 2. Fallback: Migration from Old "Inkspire" Key
+    const legacy = localStorage.getItem('inkspire_strength_data');
+    if (legacy) {
+        try {
+            const parsed = JSON.parse(legacy);
+            console.log("Migrating data from Inkspire to DSW...");
+            // Save to new key immediately (handled in useEffect, but good to note)
+            // We do NOT delete the old key yet to be safe, or we can:
+            // localStorage.removeItem('inkspire_strength_data'); 
+            return {
+                ...INITIAL_USER_DATA,
+                ...parsed,
+                internalAudit: { ...INITIAL_USER_DATA.internalAudit, ...(parsed.internalAudit || {}) }
+            };
+        } catch(e) {
+            console.error("Legacy migration error", e);
+        }
+    }
+    
+    return INITIAL_USER_DATA;
   });
   
   const [view, setView] = useState<ViewState>('welcome');
-  // Initialize language from localStorage or default to en-GB
+  
+  // Initialize language with migration check
   const [language, setLanguage] = useState<Language>(() => {
-      return (localStorage.getItem('inkspire_language') as Language) || 'en-GB';
+      const saved = localStorage.getItem('dsw_language');
+      if (saved) return saved as Language;
+      
+      const legacy = localStorage.getItem('inkspire_language');
+      if (legacy) return legacy as Language;
+      
+      return 'en-GB';
   });
   
   const [notification, setNotification] = useState<string | null>(null);
@@ -159,11 +173,11 @@ export default function App() {
 
   // --- Effects ---
   useEffect(() => {
-    localStorage.setItem('inkspire_strength_data', JSON.stringify(userData));
+    localStorage.setItem('dsw_strength_data', JSON.stringify(userData));
   }, [userData]);
 
   useEffect(() => {
-    localStorage.setItem('inkspire_language', language);
+    localStorage.setItem('dsw_language', language);
   }, [language]);
 
   // Pre-populate discovery selections if data exists
@@ -563,6 +577,74 @@ export default function App() {
       showNotification(t.weeklySaved);
   };
 
+  // --- Settings Handlers ---
+
+  const handleExportData = () => {
+      const dataStr = JSON.stringify(userData, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `dsw_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  };
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          try {
+              const importedData = JSON.parse(e.target?.result as string);
+              // Basic validation check
+              if (importedData.assessmentStrengths && Array.isArray(importedData.dailyLogs)) {
+                 if (window.confirm(t.restoreWarning)) {
+                     // Merge carefully or replace? Replace is safer for "Restore"
+                     setUserData(importedData);
+                     showNotification(t.importSuccess);
+                 }
+              } else {
+                  showNotification(t.importError);
+              }
+          } catch (error) {
+              showNotification(t.importError);
+          }
+      };
+      reader.readAsText(file);
+      // Reset input
+      event.target.value = '';
+  };
+
+  const handleCopyManifesto = () => {
+      const strengths = userData.assessmentStrengths.filter(Boolean).join(", ");
+      const anchors = userData.coreAnchors.filter(Boolean).join(", ");
+      const stories = userData.externalStories.map(s => `- ${s.pattern}: "${s.text}"`).join("\n");
+      
+      const manifesto = `
+# MY STRENGTH MANIFESTO
+
+**Directional Intention:**
+${userData.yearlyTheme || "Not defined yet"}
+
+**Top Strength Hypotheses:**
+${strengths}
+
+**Core Anchors:**
+${anchors}
+
+**Evidence Bank:**
+${stories}
+
+*Generated by Dynamic Strength Workbook*
+      `.trim();
+      
+      navigator.clipboard.writeText(manifesto);
+      showNotification(t.manifestoCopied);
+  };
+
   // --- Render Views ---
 
   const renderWelcomeView = () => (
@@ -760,12 +842,13 @@ export default function App() {
                                 <div className="flex justify-between items-center mb-2">
                                      <p className="text-base text-slate-500">{t.jotDown}</p>
                                 </div>
-                                
-                                <textarea 
-                                    value={discoveryReflection}
-                                    onChange={(e) => setDiscoveryReflection(e.target.value)}
-                                    className="w-full flex-1 bg-slate-800 border border-slate-700 rounded p-3 text-white text-base focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
-                                />
+                                <div className="relative flex-1">
+                                    <textarea 
+                                        value={discoveryReflection}
+                                        onChange={(e) => setDiscoveryReflection(e.target.value)}
+                                        className="w-full h-full min-h-[120px] bg-slate-800 border border-slate-700 rounded p-3 text-white text-base focus:ring-1 focus:ring-primary-500 mb-3 leading-relaxed resize-none"
+                                    />
+                                </div>
                                 <button 
                                     onClick={handleSingleDiscoverySubmit}
                                     disabled={isDiscovering || !discoveryReflection}
@@ -851,7 +934,7 @@ export default function App() {
                <p className="text-sm text-slate-400 mb-6">{t.miningPastDesc}</p>
                
                <div className="space-y-4">
-                   <div>
+                   <div className="relative">
                        <label className="block text-sm font-medium text-green-400 mb-2">{t.momentumLabel}</label>
                        <textarea 
                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-1 focus:ring-green-500 h-32"
@@ -860,7 +943,7 @@ export default function App() {
                            onChange={e => setUserData({...userData, internalAudit: {...userData.internalAudit, momentum: e.target.value}})}
                        />
                    </div>
-                   <div>
+                   <div className="relative">
                        <label className="block text-sm font-medium text-red-400 mb-2">{t.drainingLabel}</label>
                        <textarea 
                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-1 focus:ring-red-500 h-32"
@@ -998,7 +1081,7 @@ export default function App() {
                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                      <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><ShieldCheck className="text-red-400"/> {t.boundaryCheck}</h3>
                      <div className="space-y-4">
-                         <div>
+                         <div className="relative">
                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">{t.drainingPattern}</label>
                              <textarea 
                                  value={userData.drainingPatterns[0] || ""}
@@ -1012,7 +1095,7 @@ export default function App() {
                                  rows={2}
                              />
                          </div>
-                         <div>
+                         <div className="relative">
                              <div className="flex justify-between items-center mb-1">
                                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">{t.reframedBoundary}</label>
                                  <button onClick={handleSuggestBoundary} className="text-xs text-primary-400 hover:text-white flex items-center gap-1">
@@ -1180,12 +1263,14 @@ export default function App() {
                                           </div>
                                       )}
 
-                                      <textarea 
-                                          value={shift.practice}
-                                          onChange={e => updateShift(shift.id, 'practice', e.target.value)}
-                                          className="flex-1 w-full bg-slate-900 border border-slate-700 rounded p-3 text-white resize-none"
-                                          placeholder="e.g. Before I speak in meetings, I will write down one bullet point."
-                                      />
+                                      <div className="relative flex-1">
+                                          <textarea 
+                                              value={shift.practice}
+                                              onChange={e => updateShift(shift.id, 'practice', e.target.value)}
+                                              className="w-full h-full bg-slate-900 border border-slate-700 rounded p-3 text-white resize-none"
+                                              placeholder="e.g. Before I speak in meetings, I will write down one bullet point."
+                                          />
+                                      </div>
                                  </div>
                              </div>
                         </div>
@@ -1234,12 +1319,14 @@ export default function App() {
                              
                              <div>
                                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t.reflectionShifted}</label>
-                                 <textarea 
-                                     value={todayLog.reflection}
-                                     onChange={e => setTodayLog({...todayLog, reflection: e.target.value})}
-                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white h-24 resize-none"
-                                     placeholder="..."
-                                 />
+                                 <div className="relative">
+                                     <textarea 
+                                         value={todayLog.reflection}
+                                         onChange={e => setTodayLog({...todayLog, reflection: e.target.value})}
+                                         className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white h-24 resize-none"
+                                         placeholder="..."
+                                     />
+                                 </div>
                              </div>
 
                              <div>
@@ -1359,21 +1446,25 @@ export default function App() {
                <div className="space-y-6">
                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                        <label className="block text-sm font-bold text-green-400 mb-2">{t.winsLabel}</label>
-                       <textarea 
-                           value={weeklyData.wins}
-                           onChange={e => setWeeklyData({...weeklyData, wins: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-32"
-                           placeholder="..."
-                       />
+                       <div className="relative">
+                            <textarea 
+                                value={weeklyData.wins}
+                                onChange={e => setWeeklyData({...weeklyData, wins: e.target.value})}
+                                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-32"
+                                placeholder="..."
+                            />
+                       </div>
                    </div>
                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                        <label className="block text-sm font-bold text-red-400 mb-2">{t.challengesLabel}</label>
-                       <textarea 
-                           value={weeklyData.challenges}
-                           onChange={e => setWeeklyData({...weeklyData, challenges: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-32"
-                           placeholder="..."
-                       />
+                       <div className="relative">
+                           <textarea 
+                               value={weeklyData.challenges}
+                                onChange={e => setWeeklyData({...weeklyData, challenges: e.target.value})}
+                               className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-32"
+                               placeholder="..."
+                           />
+                       </div>
                    </div>
                </div>
                
@@ -1417,9 +1508,31 @@ export default function App() {
       </div>
   );
 
-  const renderQuarterlyView = () => (
-      // ... (No changes in Quarterly)
-      <div className="space-y-8 animate-fade-in max-w-4xl">
+  const renderQuarterlyView = () => {
+    // 1. Prepare Data for Charts
+    // Filter last 90 days
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const recentLogs = userData.dailyLogs
+        .filter(l => new Date(l.date) > ninetyDaysAgo)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Calculate Average Energy
+    const avgEnergy = recentLogs.length > 0 
+        ? (recentLogs.reduce((acc, curr) => acc + curr.energyLevel, 0) / recentLogs.length).toFixed(1) 
+        : '-';
+
+    // Format for Recharts
+    const chartData = recentLogs.map(l => ({
+        date: new Date(l.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        energy: l.energyLevel
+    }));
+
+    // Find High Energy Moments (4 or 5)
+    const highEnergyMoments = recentLogs.filter(l => l.energyLevel >= 4).reverse().slice(0, 5);
+
+    return (
+      <div className="space-y-8 animate-fade-in w-full max-w-6xl mx-auto">
            <header>
                <h2 className="text-2xl font-bold text-white mb-2">{t.quarterlyTitle}</h2>
                <p className="text-slate-400 text-base">{t.quarterlyDesc}</p>
@@ -1428,7 +1541,7 @@ export default function App() {
            {/* Rewind Stats */}
            <div className="grid grid-cols-3 gap-4 mb-8">
                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                   <div className="text-2xl font-bold text-white">{userData.dailyLogs.length}</div>
+                   <div className="text-2xl font-bold text-white">{recentLogs.length}</div>
                    <div className="text-xs text-slate-500 uppercase tracking-wider">{t.totalLogs}</div>
                </div>
                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
@@ -1436,21 +1549,70 @@ export default function App() {
                    <div className="text-xs text-slate-500 uppercase tracking-wider">{t.weekly}</div>
                </div>
                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                   <div className="text-2xl font-bold text-green-400">
-                       {userData.dailyLogs.length > 0 ? (userData.dailyLogs.reduce((a,b) => a + b.energyLevel, 0) / userData.dailyLogs.length).toFixed(1) : '-'}
-                   </div>
+                   <div className="text-2xl font-bold text-green-400">{avgEnergy}</div>
                    <div className="text-xs text-slate-500 uppercase tracking-wider">{t.avgEnergy}</div>
                </div>
            </div>
 
-           <div className="grid md:grid-cols-2 gap-8">
+           {/* MAIN DASHBOARD LAYOUT */}
+           <div className="grid lg:grid-cols-2 gap-8">
+               
+               {/* LEFT COLUMN: EVIDENCE DASHBOARD */}
+               <div className="space-y-6">
+                   {/* Trend Chart */}
+                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                       <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2"><TrendingUp size={16}/> {t.trendLine}</h3>
+                       <div className="h-48 w-full">
+                           {chartData.length > 1 ? (
+                               <ResponsiveContainer width="100%" height="100%">
+                                   <LineChart data={chartData}>
+                                       <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                       <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickMargin={10} />
+                                       <YAxis domain={[0, 5]} stroke="#94a3b8" fontSize={10} />
+                                       <Tooltip 
+                                           contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                                           itemStyle={{ color: '#e2e8f0' }}
+                                       />
+                                       <Line type="monotone" dataKey="energy" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: '#6366f1' }} activeDot={{ r: 6 }} />
+                                   </LineChart>
+                               </ResponsiveContainer>
+                           ) : (
+                               <div className="h-full flex items-center justify-center text-slate-600 italic text-sm border-2 border-dashed border-slate-800 rounded">
+                                   {t.noDataYet}
+                               </div>
+                           )}
+                       </div>
+                   </div>
+
+                   {/* High Energy Reel */}
+                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl flex-1 flex flex-col max-h-[500px]">
+                       <h3 className="text-sm font-bold text-yellow-400 mb-2 flex items-center gap-2"><Flame size={16}/> {t.highEnergyReel}</h3>
+                       <p className="text-xs text-slate-500 mb-4">{t.highEnergyDesc}</p>
+                       
+                       <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                           {highEnergyMoments.length === 0 && <div className="text-slate-600 text-sm text-center py-4">{t.noDataYet}</div>}
+                           {highEnergyMoments.map(l => (
+                               <div key={l.id} className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                                   <div className="flex justify-between items-center mb-1">
+                                       <span className="text-xs text-slate-400">{new Date(l.date).toLocaleDateString()}</span>
+                                       <div className="flex">{[...Array(l.energyLevel)].map((_, i) => <Zap key={i} size={10} className="text-yellow-500" fill="currentColor"/>)}</div>
+                                   </div>
+                                   <div className="text-xs font-bold text-primary-300 mb-1">{l.anchorUsed}</div>
+                                   <p className="text-sm text-slate-200">{l.reflection}</p>
+                               </div>
+                           ))}
+                       </div>
+                   </div>
+               </div>
+
+               {/* RIGHT COLUMN: REFLECTION INPUTS */}
                <div className="space-y-6">
                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                        <label className="block text-sm font-bold text-slate-300 mb-2">{t.q_shifted}</label>
                        <textarea 
                            value={quarterlyData.shifted}
                            onChange={e => setQuarterlyData({...quarterlyData, shifted: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none"
+                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
                            placeholder={t.q_shifted_help}
                        />
                    </div>
@@ -1459,7 +1621,7 @@ export default function App() {
                        <textarea 
                            value={quarterlyData.creatingFlow}
                            onChange={e => setQuarterlyData({...quarterlyData, creatingFlow: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none"
+                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
                            placeholder={t.q_flow_help}
                        />
                    </div>
@@ -1468,7 +1630,7 @@ export default function App() {
                        <textarea 
                            value={quarterlyData.needsAdjustment}
                            onChange={e => setQuarterlyData({...quarterlyData, needsAdjustment: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none"
+                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
                            placeholder={t.q_adjust_help}
                        />
                    </div>
@@ -1477,7 +1639,7 @@ export default function App() {
                        <textarea 
                            value={quarterlyData.emerging}
                            onChange={e => setQuarterlyData({...quarterlyData, emerging: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none"
+                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
                            placeholder={t.q_emerging_help}
                        />
                    </div>
@@ -1490,57 +1652,96 @@ export default function App() {
                        {isAnalyzingQuarter ? <Loader2 className="animate-spin" /> : <BarChart />} {t.saveAndAnalyze}
                    </button>
                </div>
-
-               {/* Analysis Result */}
-               <div className="space-y-6">
-                    {latestQuarterlyAnalysis ? (
-                        <div className="bg-gradient-to-br from-slate-900 to-indigo-900/40 border border-indigo-500/30 p-8 rounded-xl animate-fade-in relative overflow-hidden">
-                             <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={60}/></div>
-                             <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><Sparkles className="text-indigo-400"/> {t.strategicOutlook}</h3>
-                             
-                             <div className="space-y-6">
-                                 <div>
-                                     <h4 className="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-2">{t.themesObserved}</h4>
-                                     <ul className="list-disc pl-5 space-y-1 text-slate-300 text-sm">
-                                         {latestQuarterlyAnalysis.themes.map((th, i) => <li key={i}>{th}</li>)}
-                                     </ul>
-                                 </div>
-                                 <div>
-                                     <h4 className="text-sm font-bold text-green-400 uppercase tracking-wider mb-2">{t.growthTrajectory}</h4>
-                                     <p className="text-slate-200 text-sm leading-relaxed">{latestQuarterlyAnalysis.growthTrajectory}</p>
-                                 </div>
-                                 <div>
-                                     <h4 className="text-sm font-bold text-yellow-400 uppercase tracking-wider mb-2">{t.nextQuarterFocus}</h4>
-                                     <div className="bg-yellow-900/20 border border-yellow-500/30 p-4 rounded-lg text-yellow-100 text-lg font-medium text-center">
-                                         "{latestQuarterlyAnalysis.nextQuarterFocus}"
-                                     </div>
-                                 </div>
-                             </div>
-                        </div>
-                    ) : (
-                        <div className="bg-slate-900/50 border border-slate-800 border-dashed rounded-xl h-full flex items-center justify-center text-slate-500 p-8 text-center">
-                            {t.saveAndAnalyze} to see AI Strategic Outlook here.
-                        </div>
-                    )}
-
-                    {userData.quarterlyCheckIns.length > 0 && (
-                        <div className="pt-8 border-t border-slate-800">
-                             <h3 className="font-bold text-white mb-4">{t.pastCheckIns}</h3>
-                             <div className="space-y-3">
-                                 {userData.quarterlyCheckIns.map(q => (
-                                     <div key={q.id} className="bg-slate-900 p-4 rounded-lg border border-slate-800">
-                                         <div className="flex justify-between items-center mb-1">
-                                             <span className="text-sm font-bold text-white">{new Date(q.date).toLocaleDateString()}</span>
-                                             {q.aiAnalysis && <span className="bg-indigo-900 text-indigo-300 text-xs px-2 py-0.5 rounded">{t.analyzedTag}</span>}
-                                         </div>
-                                         <p className="text-slate-400 text-xs truncate">{q.shifted}</p>
-                                     </div>
-                                 ))}
-                             </div>
-                        </div>
-                    )}
-               </div>
            </div>
+
+           {/* Analysis Result (Bottom) */}
+           {latestQuarterlyAnalysis && (
+                <div className="bg-gradient-to-br from-slate-900 to-indigo-900/40 border border-indigo-500/30 p-8 rounded-xl animate-fade-in relative overflow-hidden mt-8">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={60}/></div>
+                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><Sparkles className="text-indigo-400"/> {t.strategicOutlook}</h3>
+                        
+                        <div className="space-y-6">
+                            <div>
+                                <h4 className="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-2">{t.themesObserved}</h4>
+                                <ul className="list-disc pl-5 space-y-1 text-slate-300 text-sm">
+                                    {latestQuarterlyAnalysis.themes.map((th, i) => <li key={i}>{th}</li>)}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-green-400 uppercase tracking-wider mb-2">{t.growthTrajectory}</h4>
+                                <p className="text-slate-200 text-sm leading-relaxed">{latestQuarterlyAnalysis.growthTrajectory}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-yellow-400 uppercase tracking-wider mb-2">{t.nextQuarterFocus}</h4>
+                                <div className="bg-yellow-900/20 border border-yellow-500/30 p-4 rounded-lg text-yellow-100 text-lg font-medium text-center">
+                                    "{latestQuarterlyAnalysis.nextQuarterFocus}"
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            )}
+      </div>
+    );
+  };
+
+  const renderSettingsView = () => (
+      <div className="space-y-8 animate-fade-in max-w-2xl mx-auto">
+          <div>
+               <h2 className="text-2xl font-bold text-white mb-2">{t.settingsTitle}</h2>
+               <p className="text-slate-400 text-base">{t.dataVault}</p>
+          </div>
+
+          {/* Backup & Restore */}
+          <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl space-y-6">
+              <div className="flex items-start gap-4">
+                  <div className="bg-blue-900/30 p-3 rounded-full text-blue-400"><Database size={24}/></div>
+                  <div>
+                      <h3 className="text-lg font-bold text-white mb-1">{t.backupTitle}</h3>
+                      <p className="text-sm text-slate-400">{t.backupDesc}</p>
+                  </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 pt-4">
+                  <button 
+                      onClick={handleExportData}
+                      className="bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center gap-2 transition-colors group"
+                  >
+                      <Download size={24} className="text-blue-400 group-hover:scale-110 transition-transform"/>
+                      <span className="font-semibold">{t.downloadBackup}</span>
+                  </button>
+
+                  <div className="relative">
+                      <input 
+                          type="file" 
+                          accept=".json"
+                          onChange={handleImportData}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      />
+                      <div className="bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center gap-2 transition-colors h-full group">
+                          <Upload size={24} className="text-green-400 group-hover:scale-110 transition-transform"/>
+                          <span className="font-semibold">{t.restoreBackup}</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          {/* Manifesto Generator */}
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-900/20 border border-slate-800 p-8 rounded-xl space-y-6">
+              <div className="flex items-start gap-4">
+                  <div className="bg-indigo-900/30 p-3 rounded-full text-indigo-400"><Award size={24}/></div>
+                  <div>
+                      <h3 className="text-lg font-bold text-white mb-1">{t.manifestoTitle}</h3>
+                      <p className="text-sm text-slate-400">{t.manifestoDesc}</p>
+                  </div>
+              </div>
+              
+              <button 
+                  onClick={handleCopyManifesto}
+                  className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"
+              >
+                  <Copy size={18}/> {t.copyManifesto}
+              </button>
+          </div>
       </div>
   );
 
@@ -1554,6 +1755,7 @@ export default function App() {
       {view === 'dashboard' && renderDashboardView()}
       {view === 'weekly' && renderWeeklyView()}
       {view === 'quarterly' && renderQuarterlyView()}
+      {view === 'settings' && renderSettingsView()}
       
       <Coach 
         userData={userData} 
