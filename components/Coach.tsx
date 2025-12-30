@@ -314,7 +314,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
               <div className={`bg-slate-800 border-2 ${colorClass} rounded-xl p-4 w-[85%] shadow-lg relative overflow-hidden`}>
                   <div className="absolute top-0 right-0 p-2 opacity-10"><Sparkles size={40}/></div>
                   <div className={`flex items-center gap-2 mb-2 ${iconColor} font-semibold text-base uppercase tracking-wide`}>
-                      {React.cloneElement(icon as React.ReactElement, { className: iconColor })} {title}
+                      {React.cloneElement(icon as React.ReactElement<any>, { className: iconColor })} {title}
                   </div>
                   <div className="text-white text-base font-medium mb-3 leading-relaxed">
                       {content}
@@ -355,7 +355,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
       <div className="bg-primary-600 p-4 flex justify-between items-center text-white">
         <div className="flex items-center gap-2">
           <Sparkles size={20} />
-          <h3 className="font-semibold text-base">Strength Coach</h3>
+          <h3 className="font-semibold text-base">{t.strengthCoachTitle}</h3>
         </div>
         <button onClick={handleClose} className="hover:bg-primary-500 p-1 rounded">
           <X size={20} />

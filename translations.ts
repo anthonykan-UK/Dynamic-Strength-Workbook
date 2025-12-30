@@ -47,6 +47,13 @@ export const TRANSLATIONS = {
     quickSelect: "Quick Select",
     saveStartPhase1: "Begin Phase 1: Weigh & Assess",
     
+    // Discovery - UI Elements
+    guidedModeTitle: "Guided Dialogue Mode",
+    guidedModeDesc: "The AI Coach will interview you question by question. Best for deep reflection.",
+    startConversation: "Start Conversation",
+    interactiveSpotterTitle: "Interactive Strength Spotter",
+    interactiveSpotterDesc: "Let the AI interview you",
+    
     // Discovery - BNO Deck Specific
     bnoContextToggle: "Using the HK BNO / Migrant Workbook?",
     drawCard: "Start 6-Question Journey",
@@ -175,6 +182,7 @@ export const TRANSLATIONS = {
     reflectionShifted: "Reflection: What worked well? What's one small adjustment?",
     logEntry: "Log Day & Get Spark",
     activeShifts: "Current Practices",
+    editShifts: "Edit Shifts",
     momentum: "Momentum",
     recentEntries: "Recent Reflections",
     noEntries: "Start your practice today.",
@@ -189,6 +197,7 @@ export const TRANSLATIONS = {
     weeklyTitle: "Weekly Reflection",
     weeklyContext: "Your Week in Motion",
     weeklyContextDesc: "Review your data to spot patterns before you reflect.",
+    contextLast7Days: "Context: Last 7 Days",
     keyMoments: "Key Moments",
     autoDraft: "Auto-Draft with AI",
     analyzingLogs: "Analyzing your week...",
@@ -221,7 +230,7 @@ export const TRANSLATIONS = {
     q_flow_help: "Where are you seeing energy and meaningful impacts?",
     q_adjust: "3. What needs adjustment?",
     q_adjust_help: "Where are patterns not serving you? What experiment could you try?",
-    q_emerging: "4. 什麼正在浮現？",
+    q_emerging: "4. What's emerging?",
     q_emerging_help: "Unexpected opportunities or new capabilities becoming visible?",
     saveQuarterly: "Save Check-In",
     noWeeklyReflections: "No weekly reflections found.",
@@ -244,6 +253,7 @@ export const TRANSLATIONS = {
     ],
     
     // Coach
+    strengthCoachTitle: "Strength Coach",
     coachWelcome: "Hi! I'm your Dynamic Strength Assistant. I follow the WAVES Cycle to help you build momentum. Where should we start?",
     coachError: "I'm having trouble connecting. Please try again later.",
     askGuidance: "Ask for guidance on the WAVES cycle...",
@@ -337,6 +347,13 @@ export const TRANSLATIONS = {
     quickSelect: "快速選擇",
     saveStartPhase1: "開始第一階段：衡量與評估",
     
+    // Discovery - UI Elements
+    guidedModeTitle: "引導式對話模式",
+    guidedModeDesc: "AI 教練會逐一詢問你問題。最適合深度反思。",
+    startConversation: "開始對話",
+    interactiveSpotterTitle: "互動式優勢識別",
+    interactiveSpotterDesc: "讓 AI 訪談你",
+
     // Discovery - BNO Deck Specific
     bnoContextToggle: "使用 BNO / 移英港人練習冊？",
     drawCard: "開始 6 問題旅程",
@@ -465,6 +482,7 @@ export const TRANSLATIONS = {
     reflectionShifted: "反思：什麼運作良好？有一個什麼小調整？",
     logEntry: "記錄並獲得火花",
     activeShifts: "當前練習",
+    editShifts: "編輯練習",
     momentum: "動力",
     recentEntries: "最近反思",
     noEntries: "今天開始你的練習。",
@@ -479,6 +497,7 @@ export const TRANSLATIONS = {
     weeklyTitle: "每週反思",
     weeklyContext: "你的一週動態",
     weeklyContextDesc: "在反思前，先檢視你的數據以發現模式。",
+    contextLast7Days: "背景：過去 7 天",
     keyMoments: "關鍵時刻",
     autoDraft: "AI 自動草擬",
     analyzingLogs: "正在分析你的一週...",
@@ -534,6 +553,7 @@ export const TRANSLATIONS = {
     ],
     
     // Coach
+    strengthCoachTitle: "優勢教練",
     coachWelcome: "你好！我是你的動態優勢助理。我遵循 WAVES 循環來協助你建立動力。我們從哪裡開始？",
     coachError: "我現在連接有點問題，請稍後再試。",
     askGuidance: "詢問關於 WAVES 循環的指引...",

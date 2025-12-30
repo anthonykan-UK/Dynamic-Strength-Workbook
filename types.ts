@@ -34,6 +34,7 @@ export interface WeeklyReflection {
   challenges: string;
   energyLevel: number;
   focusForNextWeek: string;
+  theme?: string; // Added theme
   aiSummary?: string; // AI generated synthesis of the week
 }
 
