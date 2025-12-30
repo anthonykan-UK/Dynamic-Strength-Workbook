@@ -15,7 +15,9 @@ import {
   Search,
   Globe,
   HelpCircle,
-  Settings
+  Settings,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -23,10 +25,20 @@ interface LayoutProps {
   setView: (view: ViewState) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  privacyMode: boolean;
+  togglePrivacyMode: () => void;
   children: React.ReactNode;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, setLanguage, children }) => {
+export const Layout: React.FC<LayoutProps> = ({ 
+    currentView, 
+    setView, 
+    language, 
+    setLanguage, 
+    privacyMode, 
+    togglePrivacyMode, 
+    children 
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const t = TRANSLATIONS[language];
@@ -80,8 +92,23 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
     </div>
   );
 
+  const PrivacyToggle = () => (
+      <button 
+        onClick={togglePrivacyMode}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-base font-medium ${
+            privacyMode 
+            ? 'text-primary-400 bg-primary-900/10' 
+            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+        }`}
+        title={privacyMode ? t.privacyOff : t.privacyMode}
+      >
+          {privacyMode ? <EyeOff size={20} /> : <Eye size={20} />}
+          {t.privacyMode}
+      </button>
+  );
+
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-200 overflow-hidden">
+    <div className={`flex min-h-screen bg-slate-950 text-slate-200 overflow-hidden ${privacyMode ? 'privacy-blur' : ''}`}>
       {/* Help Modal Overlay */}
       {showHelp && <HelpGuide language={language} onClose={() => setShowHelp(false)} />}
 
@@ -115,6 +142,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
           <NavItem view="quarterly" icon={BarChart} label={t.quarterly} />
           
           <div className="my-4 border-t border-slate-800"></div>
+          <PrivacyToggle />
           <NavItem view="settings" icon={Settings} label={t.settings} />
         </nav>
         
@@ -152,6 +180,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
             <NavItem view="dashboard" icon={LayoutDashboard} label={t.dashboard} />
             <NavItem view="weekly" icon={Calendar} label={t.weekly} />
             <NavItem view="quarterly" icon={BarChart} label={t.quarterly} />
+            <div className="my-2 border-t border-slate-800"></div>
+            <PrivacyToggle />
             <NavItem view="settings" icon={Settings} label={t.settings} />
             <div className="pt-4 mt-4 border-t border-slate-800">
                 <button 
@@ -166,7 +196,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, language, 
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pt-24 md:pt-12 p-6 md:p-12 max-w-5xl mx-auto w-full scroll-smooth">
+      <main className="flex-1 overflow-y-auto pt-24 md:pt-12 p-6 md:p-12 max-w-5xl mx-auto w-full scroll-smooth relative">
         {children}
       </main>
     </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   UserData, 
@@ -17,6 +16,7 @@ import { REFLECTION_CARDS, ReflectionCard } from './constants';
 import { analyzeStoryWithAI, suggestShiftsWithAI, discoverStrengthsWithAI, generateDailySpark, summarizeWeek, analyzeJourneyWithAI, JourneyEntry, suggestThemeWithAI, analyzeQuarterlyCheckIn, suggestBoundaryWithAI } from './services/ai';
 import { Layout } from './components/Layout';
 import { Coach } from './components/Coach';
+import { Constellation } from './components/Constellation';
 import { 
   ArrowRight, 
   Save, 
@@ -58,7 +58,8 @@ import {
   Download,
   Upload,
   Copy,
-  Database
+  Database,
+  Target
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from 'recharts';
 
@@ -79,9 +80,6 @@ export default function App() {
         try {
             const parsed = JSON.parse(legacy);
             console.log("Migrating data from Inkspire to DSW...");
-            // Save to new key immediately (handled in useEffect, but good to note)
-            // We do NOT delete the old key yet to be safe, or we can:
-            // localStorage.removeItem('inkspire_strength_data'); 
             return {
                 ...INITIAL_USER_DATA,
                 ...parsed,
@@ -96,6 +94,7 @@ export default function App() {
   });
   
   const [view, setView] = useState<ViewState>('welcome');
+  const [privacyMode, setPrivacyMode] = useState(false);
   
   // Initialize language with migration check
   const [language, setLanguage] = useState<Language>(() => {
@@ -191,6 +190,12 @@ export default function App() {
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
+  };
+  
+  const handleTogglePrivacy = () => {
+      const newState = !privacyMode;
+      setPrivacyMode(newState);
+      showNotification(newState ? t.privacyOn : t.privacyOff);
   };
 
   // --- Handlers ---
@@ -1034,7 +1039,6 @@ ${stories}
   );
 
   const renderPhase2View = () => (
-      // ... (No changes in Phase 2)
       <div className="space-y-8 animate-fade-in max-w-4xl">
         <header className="flex justify-between items-start">
              <div>
@@ -1053,6 +1057,9 @@ ${stories}
                 ))}
             </div>
         )}
+
+        {/* Constellation Visualizer */}
+        <Constellation userData={userData} language={language} />
 
         <div className="grid md:grid-cols-2 gap-8">
              <div className="space-y-6">
@@ -1194,559 +1201,607 @@ ${stories}
   );
 
   const renderPhase3View = () => (
-      // ... (No changes in Phase 3)
-      <div className="space-y-8 animate-fade-in max-w-4xl">
-           <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{t.phase3Title}</h2>
-                <p className="text-slate-400 text-base">{t.phase3Subtitle}</p>
-           </div>
-
-           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 min-h-[400px]">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-semibold text-white text-lg">{t.shiftAction}</h3>
-                    <button onClick={addShift} className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                        <Plus size={16} /> {t.addNewShift}
-                    </button>
-                </div>
-                
-                <div className="space-y-6">
-                    {userData.shifts.length === 0 && <div className="text-center text-slate-600 py-8 italic">{t.noActiveShifts}</div>}
-                    {userData.shifts.map((shift, index) => (
-                        <div key={shift.id} className="bg-slate-800 p-6 rounded-xl border border-slate-700 relative">
-                             <button onClick={() => deleteShift(shift.id)} className="absolute top-4 right-4 text-slate-600 hover:text-red-400">
-                                 <Trash2 size={18} />
-                             </button>
-                             <div className="grid md:grid-cols-2 gap-6">
-                                 <div>
-                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t.territory}</label>
-                                     <select 
-                                        value={shift.territory}
-                                        onChange={e => updateShift(shift.id, 'territory', e.target.value)}
-                                        className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white mb-4"
-                                     >
-                                         {Object.entries(t.territoryOptions).map(([k, v]) => (
-                                             <option key={k} value={k}>{v}</option>
-                                         ))}
-                                     </select>
-
-                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t.poweringAnchor}</label>
-                                     <select 
-                                        value={shift.anchorId}
-                                        onChange={e => updateShift(shift.id, 'anchorId', e.target.value)}
-                                        className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white"
-                                     >
-                                         <option value="">{t.selectAnchor}</option>
-                                         {userData.coreAnchors.filter(Boolean).map(a => (
-                                             <option key={a} value={a}>{a}</option>
-                                         ))}
-                                     </select>
-                                 </div>
-                                 <div className="flex flex-col">
-                                      <div className="flex justify-between items-center mb-2">
-                                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">{t.practicePlaceholder}</label>
-                                          <button 
-                                             onClick={() => handleSuggestShifts(shift.id, shift.territory, shift.anchorId)}
-                                             className="text-xs text-primary-400 hover:text-white flex items-center gap-1"
-                                          >
-                                              {suggestingShiftId === shift.id ? <Loader2 className="animate-spin" size={12}/> : <Sparkles size={12}/>} {t.suggestIdeas}
-                                          </button>
-                                      </div>
-                                      
-                                      {shiftSuggestions[shift.id] && (
-                                          <div className="mb-3 space-y-2 bg-slate-900 p-3 rounded border border-slate-700">
-                                              <p className="text-xs text-slate-400 mb-2">{t.selectIdea}</p>
-                                              {shiftSuggestions[shift.id].map((s, i) => (
-                                                  <button key={i} onClick={() => applySuggestion(shift.id, s)} className="block w-full text-left text-sm text-slate-200 hover:text-white hover:bg-slate-800 p-2 rounded transition-colors">
-                                                      • {s}
-                                                  </button>
-                                              ))}
-                                          </div>
-                                      )}
-
-                                      <div className="relative flex-1">
-                                          <textarea 
-                                              value={shift.practice}
-                                              onChange={e => updateShift(shift.id, 'practice', e.target.value)}
-                                              className="w-full h-full bg-slate-900 border border-slate-700 rounded p-3 text-white resize-none"
-                                              placeholder="e.g. Before I speak in meetings, I will write down one bullet point."
-                                          />
-                                      </div>
-                                 </div>
-                             </div>
-                        </div>
-                    ))}
-                </div>
-           </div>
-           
-           <div className="flex justify-end pt-6 border-t border-slate-800">
-                <button 
-                    onClick={() => setView('dashboard')}
-                    className="bg-green-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-green-500 transition-colors flex items-center gap-2"
-                >
-                    {t.goToDashboard} <ArrowRight size={18} />
-                </button>
-           </div>
+    <div className="space-y-8 animate-fade-in max-w-4xl">
+      <div>
+        <h2 className="text-2xl font-bold text-white mb-2">{t.phase3Title}</h2>
+        <p className="text-slate-400 text-base">{t.phase3Subtitle}</p>
       </div>
+
+      <div className="space-y-6">
+        {userData.shifts.length === 0 && (
+          <div className="text-center py-10 border-2 border-dashed border-slate-800 rounded-xl">
+             <p className="text-slate-500 mb-4">{t.noActiveShifts}</p>
+             <button onClick={addShift} className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-500">
+               {t.addNewShift}
+             </button>
+          </div>
+        )}
+
+        {userData.shifts.map((shift, index) => (
+          <div key={shift.id} className="bg-slate-900 border border-slate-800 p-6 rounded-xl relative group">
+            <button 
+              onClick={() => deleteShift(shift.id)} 
+              className="absolute top-4 right-4 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 size={18} />
+            </button>
+
+            <div className="grid md:grid-cols-2 gap-6">
+               <div className="space-y-4">
+                  <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t.territory}</label>
+                      <select 
+                        value={shift.territory}
+                        onChange={(e) => updateShift(shift.id, 'territory', e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-1 focus:ring-primary-500"
+                      >
+                          {Object.values(TERRITORIES).map(terr => (
+                              <option key={terr} value={terr}>{terr}</option>
+                          ))}
+                      </select>
+                  </div>
+                  <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t.poweringAnchor}</label>
+                      <select 
+                        value={shift.anchorId}
+                        onChange={(e) => updateShift(shift.id, 'anchorId', e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-1 focus:ring-primary-500"
+                      >
+                          <option value="">{t.selectAnchor}</option>
+                          {userData.coreAnchors.filter(Boolean).map(a => (
+                              <option key={a} value={a}>{a}</option>
+                          ))}
+                      </select>
+                  </div>
+               </div>
+
+               <div className="space-y-4">
+                   <div className="flex justify-between items-center">
+                       <label className="block text-xs font-bold text-green-400 uppercase tracking-wider">{t.shiftAction}</label>
+                       <button 
+                         onClick={() => handleSuggestShifts(shift.id, shift.territory, shift.anchorId)}
+                         disabled={suggestingShiftId === shift.id}
+                         className="text-xs text-primary-400 hover:text-white flex items-center gap-1"
+                       >
+                           {suggestingShiftId === shift.id ? <Loader2 className="animate-spin" size={12}/> : <Sparkles size={12}/>} {t.suggestIdeas}
+                       </button>
+                   </div>
+                   
+                   {shiftSuggestions[shift.id] && (
+                       <div className="space-y-2 mb-2">
+                           <p className="text-xs text-slate-500">{t.selectIdea}</p>
+                           {shiftSuggestions[shift.id].map((s, i) => (
+                               <button 
+                                 key={i} 
+                                 onClick={() => applySuggestion(shift.id, s)}
+                                 className="block w-full text-left text-xs bg-slate-800 hover:bg-slate-700 p-2 rounded text-slate-300 border border-slate-700"
+                               >
+                                 {s}
+                               </button>
+                           ))}
+                       </div>
+                   )}
+
+                   <textarea 
+                       value={shift.practice}
+                       onChange={(e) => updateShift(shift.id, 'practice', e.target.value)}
+                       placeholder={t.practicePlaceholder}
+                       className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-1 focus:ring-green-500 h-24 resize-none"
+                   />
+               </div>
+            </div>
+          </div>
+        ))}
+        
+        {userData.shifts.length > 0 && (
+            <button onClick={addShift} className="w-full py-3 border border-dashed border-slate-700 rounded-xl text-slate-500 hover:text-white hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                <Plus size={18} /> {t.addNewShift}
+            </button>
+        )}
+      </div>
+      
+      <div className="flex justify-end pt-6 border-t border-slate-800">
+         <button 
+            onClick={() => setView('dashboard')}
+            className="bg-primary-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-primary-500 transition-colors flex items-center gap-2"
+         >
+            {t.goToDashboard} <ArrowRight size={18} />
+         </button>
+      </div>
+    </div>
   );
 
   const renderDashboardView = () => (
-      <div className="space-y-8 animate-fade-in max-w-4xl">
-           <div>
+    <div className="space-y-8 animate-fade-in max-w-5xl">
+       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div>
                <h2 className="text-2xl font-bold text-white mb-2">{t.dailyDashboard}</h2>
                <p className="text-slate-400 text-base">{t.consistentSteps}</p>
-           </div>
-           
-           <div className="grid md:grid-cols-3 gap-6">
-                <div className="md:col-span-2 space-y-6">
-                    {/* Log Entry Card */}
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-600/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-                        
-                        <h3 className="font-semibold text-white mb-6 flex items-center gap-2"><Zap className="text-yellow-400" fill="currentColor"/> {t.todaysLog}</h3>
-                        
-                        <div className="space-y-4">
-                             <div>
-                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t.anchorUsed}</label>
-                                 <select 
-                                     value={todayLog.anchor}
-                                     onChange={e => setTodayLog({...todayLog, anchor: e.target.value})}
-                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white"
-                                 >
-                                     <option value="">{t.selectAnchor}</option>
-                                     {userData.coreAnchors.filter(Boolean).map(a => <option key={a} value={a}>{a}</option>)}
-                                 </select>
-                             </div>
-                             
-                             <div>
-                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t.reflectionShifted}</label>
-                                 <div className="relative">
-                                     <textarea 
-                                         value={todayLog.reflection}
-                                         onChange={e => setTodayLog({...todayLog, reflection: e.target.value})}
-                                         className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white h-24 resize-none"
-                                         placeholder="..."
-                                     />
-                                 </div>
-                             </div>
+            </div>
+            <div className="flex gap-4 text-sm font-medium">
+                <div className="bg-slate-900 px-4 py-2 rounded-lg border border-slate-800 flex items-center gap-2 text-slate-300">
+                    <Activity size={16} className="text-primary-500"/>
+                    {userData.dailyLogs.length} {t.totalEntries}
+                </div>
+            </div>
+       </header>
 
-                             <div>
-                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{t.energyLabel}</label>
-                                 <div className="flex justify-between items-center bg-slate-950 p-2 rounded-full border border-slate-700">
-                                      <span className="text-xs text-slate-400 pl-3">{t.energyLow}</span>
-                                      <div className="flex gap-2">
-                                          {[1,2,3,4,5].map(n => (
-                                              <button 
-                                                 key={n}
-                                                 onClick={() => setTodayLog({...todayLog, energy: n})}
-                                                 className={`w-8 h-8 rounded-full font-bold text-sm transition-all ${
-                                                     todayLog.energy === n 
-                                                     ? 'bg-primary-600 text-white shadow-lg scale-110' 
-                                                     : 'bg-slate-800 text-slate-500 hover:bg-slate-700'
-                                                 }`}
-                                              >
-                                                  {n}
-                                              </button>
-                                          ))}
+       <div className="grid md:grid-cols-3 gap-8">
+            {/* Left Col: Shifts & Logging */}
+            <div className="md:col-span-2 space-y-8">
+                 {/* Active Shifts Card */}
+                 <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 p-6 rounded-2xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-5"><Target size={120} /></div>
+                      <div className="flex justify-between items-center mb-4">
+                          <h3 className="font-semibold text-white flex items-center gap-2"><Target className="text-red-400" size={18}/> {t.activeShifts}</h3>
+                          <button onClick={() => setView('phase3')} className="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-full text-slate-300 transition-colors">
+                              {t.editShifts}
+                          </button>
+                      </div>
+                      
+                      {userData.shifts.length === 0 ? (
+                          <div className="text-slate-500 text-sm italic">{t.noActiveShifts}</div>
+                      ) : (
+                          <div className="space-y-3 relative z-10">
+                              {userData.shifts.map(s => (
+                                  <div key={s.id} className="flex items-start gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                                      <div className="mt-1"><CheckCircle2 size={16} className="text-green-500" /></div>
+                                      <div>
+                                          <div className="text-white text-sm font-medium">{s.practice}</div>
+                                          <div className="text-xs text-slate-500">{s.territory} • {s.anchorId}</div>
                                       </div>
-                                      <span className="text-xs text-slate-400 pr-3">{t.energyHigh}</span>
+                                  </div>
+                              ))}
+                          </div>
+                      )}
+                 </div>
+
+                 {/* Logging Area */}
+                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                      <h3 className="font-semibold text-white mb-6 flex items-center gap-2"><Sun className="text-yellow-500" size={18}/> {t.todaysLog}</h3>
+                      
+                      <div className="space-y-6">
+                          <div>
+                              <label className="block text-sm font-medium text-slate-400 mb-2">{t.anchorUsed}</label>
+                              <select 
+                                  value={todayLog.anchor}
+                                  onChange={(e) => setTodayLog({...todayLog, anchor: e.target.value})}
+                                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-1 focus:ring-primary-500"
+                              >
+                                  <option value="">Select Anchor...</option>
+                                  {userData.coreAnchors.filter(Boolean).map(a => (
+                                      <option key={a} value={a}>{a}</option>
+                                  ))}
+                              </select>
+                          </div>
+
+                          <div>
+                              <label className="block text-sm font-medium text-slate-400 mb-2">{t.reflectionShifted}</label>
+                              <textarea 
+                                  value={todayLog.reflection}
+                                  onChange={(e) => setTodayLog({...todayLog, reflection: e.target.value})}
+                                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
+                              />
+                          </div>
+
+                          <div>
+                              <label className="block text-sm font-medium text-slate-400 mb-3">{t.energyLabel}</label>
+                              <div className="flex items-center gap-4">
+                                  <span className="text-xs text-slate-500">{t.energyLow}</span>
+                                  <div className="flex-1 flex justify-between bg-slate-800 p-2 rounded-full border border-slate-700">
+                                      {[1, 2, 3, 4, 5].map(v => (
+                                          <button
+                                              key={v}
+                                              onClick={() => setTodayLog({...todayLog, energy: v})}
+                                              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                                                  todayLog.energy === v 
+                                                  ? 'bg-gradient-to-br from-primary-500 to-indigo-600 text-white shadow-lg scale-110' 
+                                                  : 'text-slate-500 hover:bg-slate-700'
+                                              }`}
+                                          >
+                                              {v}
+                                          </button>
+                                      ))}
+                                  </div>
+                                  <span className="text-xs text-slate-500">{t.energyHigh}</span>
+                              </div>
+                          </div>
+
+                          <button 
+                             onClick={handleLogSubmit}
+                             disabled={isLogging || !todayLog.anchor || !todayLog.reflection}
+                             className="w-full bg-primary-600 hover:bg-primary-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-primary-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                              {isLogging ? <Loader2 className="animate-spin" /> : <Save size={20} />}
+                              {t.logEntry}
+                          </button>
+                      </div>
+                 </div>
+            </div>
+
+            {/* Right Col: Feedback & History */}
+            <div className="space-y-6">
+                 {/* Spark Feedback */}
+                 {lastSpark && (
+                     <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border border-yellow-500/30 p-6 rounded-2xl animate-fade-in relative overflow-hidden">
+                         <div className="absolute top-0 right-0 p-2 opacity-20"><Zap size={80} className="text-yellow-500"/></div>
+                         <div className="flex items-center gap-2 text-yellow-400 font-bold mb-2 text-sm uppercase tracking-wide">
+                             <Sparkles size={16} /> {t.strengthSpark}
+                         </div>
+                         <p className="text-white text-lg font-medium leading-relaxed italic">
+                             "{lastSpark}"
+                         </p>
+                     </div>
+                 )}
+
+                 {/* Recent Entries */}
+                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit max-h-[600px] overflow-y-auto custom-scrollbar">
+                     <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><History size={18} className="text-slate-400"/> {t.recentEntries}</h3>
+                     <div className="space-y-4">
+                         {userData.dailyLogs.slice(0, 10).map(log => (
+                             <div key={log.id} className="border-l-2 border-slate-700 pl-4 py-1 relative">
+                                 <div className="text-xs text-slate-500 mb-1">{new Date(log.date).toLocaleDateString()}</div>
+                                 <div className="text-white text-sm font-medium mb-1">{log.anchorUsed}</div>
+                                 <div className="text-slate-400 text-xs line-clamp-2">{log.reflection}</div>
+                                 <div className="absolute right-0 top-1">
+                                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                          log.energyLevel >= 4 ? 'bg-green-900 text-green-300' : 
+                                          log.energyLevel <= 2 ? 'bg-red-900 text-red-300' : 'bg-slate-800 text-slate-300'
+                                      }`}>
+                                          ⚡ {log.energyLevel}
+                                      </span>
                                  </div>
                              </div>
-                             
-                             <button 
-                                 onClick={handleLogSubmit}
-                                 disabled={isLogging || !todayLog.anchor || !todayLog.reflection}
-                                 className="w-full bg-white text-primary-900 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
-                             >
-                                 {isLogging ? <Loader2 className="animate-spin"/> : <CheckCircle2 />}
-                                 {t.logEntry}
-                             </button>
-                        </div>
-                    </div>
-                    
-                    {lastSpark && (
-                        <div className="bg-indigo-900/30 border border-indigo-500/30 p-6 rounded-xl animate-fade-in">
-                            <h4 className="text-indigo-300 font-bold text-sm mb-2 flex items-center gap-2"><Sparkles size={16}/> {t.strengthSpark}</h4>
-                            <p className="text-white text-lg font-medium leading-relaxed">"{lastSpark}"</p>
-                        </div>
-                    )}
-                </div>
-
-                <div className="space-y-6">
-                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                         <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider mb-4">{t.activeShifts}</h3>
-                         {userData.shifts.length === 0 && <p className="text-slate-600 text-sm italic">{t.noActiveShifts}</p>}
-                         <ul className="space-y-3">
-                             {userData.shifts.slice(0, 3).map(s => (
-                                 <li key={s.id} className="text-sm text-slate-300 border-l-2 border-primary-500 pl-3 py-1">
-                                     {s.practice}
-                                 </li>
-                             ))}
-                         </ul>
-                         <button onClick={() => setView('phase3')} className="mt-4 text-primary-400 text-xs hover:text-white">{t.editShifts} &rarr;</button>
+                         ))}
+                         {userData.dailyLogs.length === 0 && (
+                             <div className="text-slate-500 text-sm">{t.noEntries}</div>
+                         )}
                      </div>
-
-                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                         <div className="flex justify-between items-end mb-2">
-                             <div className="text-4xl font-bold text-white">{userData.dailyLogs.length}</div>
-                             <div className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1">{t.totalEntries}</div>
-                         </div>
-                         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                             <div className="h-full bg-green-500" style={{ width: `${Math.min(userData.dailyLogs.length * 2, 100)}%` }}></div>
-                         </div>
-                     </div>
-                </div>
-           </div>
-
-           <div className="pt-8 border-t border-slate-800">
-               <h3 className="font-bold text-white mb-6 flex items-center gap-2"><History size={20}/> {t.recentEntries}</h3>
-               <div className="space-y-4">
-                   {userData.dailyLogs.length === 0 && <p className="text-slate-500">{t.noEntries}</p>}
-                   {userData.dailyLogs.slice(0, 5).map(log => (
-                       <div key={log.id} className="bg-slate-900 p-4 rounded-lg border border-slate-800 flex gap-4">
-                           <div className="flex flex-col items-center justify-center bg-slate-800 w-16 h-16 rounded-lg border border-slate-700 shrink-0">
-                               <span className="text-xs text-slate-400">{new Date(log.date).getDate()}</span>
-                               <span className="text-xs font-bold text-slate-300">{new Date(log.date).toLocaleString('default', { month: 'short' }).toUpperCase()}</span>
-                           </div>
-                           <div>
-                               <div className="flex items-center gap-2 mb-1">
-                                   <span className="bg-primary-900/50 text-primary-300 text-xs px-2 py-0.5 rounded border border-primary-500/20">{log.anchorUsed}</span>
-                                   <div className="flex">{[...Array(log.energyLevel)].map((_, i) => <Zap key={i} size={12} className="text-yellow-500" fill="currentColor"/>)}</div>
-                               </div>
-                               <p className="text-slate-300 text-sm leading-relaxed">{log.reflection}</p>
-                               {log.aiFeedback && (
-                                   <div className="mt-2 text-indigo-300 text-xs flex gap-1 items-start">
-                                       <Sparkles size={12} className="mt-0.5 shrink-0"/> {log.aiFeedback}
-                                   </div>
-                               )}
-                           </div>
-                       </div>
-                   ))}
-               </div>
-           </div>
-      </div>
+                 </div>
+            </div>
+       </div>
+    </div>
   );
 
   const renderWeeklyView = () => (
       <div className="space-y-8 animate-fade-in max-w-4xl">
-           <header className="flex justify-between items-end">
-               <div>
-                   <h2 className="text-2xl font-bold text-white mb-2">{t.weeklyTitle}</h2>
-                   <p className="text-slate-400 text-base">{t.weeklyContext}</p>
-               </div>
-               <button 
-                  onClick={handleAutoDraft} 
-                  disabled={isSummarizing || userData.dailyLogs.length === 0}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-               >
-                   {isSummarizing ? <Loader2 className="animate-spin" size={16}/> : <Wand2 size={16}/>} {t.autoDraft}
-               </button>
-           </header>
-           
-           <div className="grid md:grid-cols-2 gap-8">
-               <div className="space-y-6">
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                       <label className="block text-sm font-bold text-green-400 mb-2">{t.winsLabel}</label>
-                       <div className="relative">
-                            <textarea 
-                                value={weeklyData.wins}
-                                onChange={e => setWeeklyData({...weeklyData, wins: e.target.value})}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-32"
-                                placeholder="..."
-                            />
-                       </div>
-                   </div>
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                       <label className="block text-sm font-bold text-red-400 mb-2">{t.challengesLabel}</label>
-                       <div className="relative">
-                           <textarea 
-                               value={weeklyData.challenges}
-                                onChange={e => setWeeklyData({...weeklyData, challenges: e.target.value})}
-                               className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-32"
-                               placeholder="..."
-                           />
-                       </div>
-                   </div>
-               </div>
-               
-               <div className="space-y-6">
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                       <label className="block text-sm font-bold text-purple-400 mb-2">{t.themeLabel}</label>
-                       <input 
-                           value={weeklyData.theme}
-                           onChange={e => setWeeklyData({...weeklyData, theme: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white"
-                           placeholder={t.weeklyThemePlaceholder}
-                       />
-                   </div>
-                   
-                   {/* Context Data */}
-                   <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50">
-                       <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">{t.contextLast7Days}</h4>
-                       {userData.dailyLogs.slice(0,7).length === 0 ? (
-                           <p className="text-slate-500 text-sm">{t.noLogsThisWeek}</p>
-                       ) : (
-                           <ul className="space-y-2">
-                               {userData.dailyLogs.slice(0, 7).map(l => (
-                                   <li key={l.id} className="text-xs text-slate-300 flex justify-between">
-                                       <span className="truncate max-w-[70%]">{l.reflection.substring(0, 40)}...</span>
-                                       <span className={`px-1.5 rounded ${l.energyLevel >= 4 ? 'bg-green-900 text-green-300' : 'bg-slate-700 text-slate-400'}`}>E: {l.energyLevel}</span>
-                                   </li>
-                               ))}
-                           </ul>
-                       )}
-                   </div>
-                   
-                   <button 
-                       onClick={saveWeeklyReflection}
-                       disabled={!weeklyData.wins}
-                       className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
-                   >
-                       <Save size={18} /> {t.saveAndAnalyze}
-                   </button>
-               </div>
-           </div>
+          <header className="flex justify-between items-end">
+              <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">{t.weeklyTitle}</h2>
+                  <p className="text-slate-400 text-base">{t.weeklyContext}</p>
+              </div>
+          </header>
+
+          <div className="grid md:grid-cols-3 gap-8">
+              {/* Context Column */}
+              <div className="space-y-4">
+                  <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl">
+                      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">{t.contextLast7Days}</h3>
+                      {userData.dailyLogs.length === 0 ? (
+                          <div className="text-slate-500 text-sm">{t.noLogsThisWeek}</div>
+                      ) : (
+                          <div className="space-y-3">
+                              {userData.dailyLogs.slice(0, 7).map(log => (
+                                  <div key={log.id} className="text-sm border-b border-slate-800 pb-2 last:border-0">
+                                      <div className="flex justify-between text-xs text-slate-500 mb-1">
+                                          <span>{new Date(log.date).toLocaleDateString()}</span>
+                                          <span className={log.energyLevel >= 4 ? 'text-green-400' : ''}>⚡ {log.energyLevel}</span>
+                                      </div>
+                                      <div className="text-white font-medium mb-1">{log.anchorUsed}</div>
+                                      <div className="text-slate-400 text-xs line-clamp-2">{log.reflection}</div>
+                                  </div>
+                              ))}
+                          </div>
+                      )}
+                  </div>
+              </div>
+
+              {/* Reflection Form */}
+              <div className="md:col-span-2 space-y-6">
+                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                      <div className="flex justify-between items-center mb-6">
+                          <h3 className="font-semibold text-white">{t.keyMoments}</h3>
+                          <button 
+                             onClick={handleAutoDraft}
+                             disabled={isSummarizing || userData.dailyLogs.length === 0}
+                             className="text-xs bg-indigo-900 hover:bg-indigo-800 text-indigo-200 px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+                          >
+                              {isSummarizing ? <Loader2 className="animate-spin" size={12}/> : <Wand2 size={12}/>} {t.autoDraft}
+                          </button>
+                      </div>
+
+                      <div className="space-y-4">
+                          <div>
+                              <label className="block text-sm font-medium text-green-400 mb-2">{t.winsLabel}</label>
+                              <textarea 
+                                  value={weeklyData.wins}
+                                  onChange={(e) => setWeeklyData({...weeklyData, wins: e.target.value})}
+                                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 focus:ring-1 focus:ring-green-500"
+                              />
+                          </div>
+                          <div>
+                              <label className="block text-sm font-medium text-orange-400 mb-2">{t.challengesLabel}</label>
+                              <textarea 
+                                  value={weeklyData.challenges}
+                                  onChange={(e) => setWeeklyData({...weeklyData, challenges: e.target.value})}
+                                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 focus:ring-1 focus:ring-orange-500"
+                              />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                  <label className="block text-sm font-medium text-purple-400 mb-2">{t.themeLabel}</label>
+                                  <input 
+                                      value={weeklyData.theme}
+                                      onChange={(e) => setWeeklyData({...weeklyData, theme: e.target.value})}
+                                      placeholder={t.weeklyThemePlaceholder}
+                                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-1 focus:ring-purple-500"
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-sm font-medium text-blue-400 mb-2">{t.nextQuarterFocus} (Next Week)</label>
+                                  <input 
+                                      value={weeklyData.focus}
+                                      onChange={(e) => setWeeklyData({...weeklyData, focus: e.target.value})}
+                                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-1 focus:ring-blue-500"
+                                  />
+                              </div>
+                          </div>
+                      </div>
+
+                      <div className="mt-6 flex justify-end">
+                          <button 
+                             onClick={saveWeeklyReflection}
+                             className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
+                          >
+                              <Save size={18} /> {t.weeklySaved.replace('!', '')}
+                          </button>
+                      </div>
+                  </div>
+                  
+                  {/* Past Reflections List */}
+                  {userData.weeklyReflections.length > 0 && (
+                      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                          <h3 className="font-semibold text-white mb-4">{t.recentEntries}</h3>
+                          <div className="space-y-4">
+                              {userData.weeklyReflections.slice(0, 3).map(w => (
+                                  <div key={w.id} className="border-b border-slate-800 last:border-0 pb-4">
+                                      <div className="flex justify-between text-sm text-slate-500 mb-1">
+                                          <span>{new Date(w.date).toLocaleDateString()}</span>
+                                          {w.theme && <span className="text-purple-400 font-medium">{w.theme}</span>}
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-4 text-sm">
+                                          <div><span className="text-green-500 font-bold">Wins:</span> <span className="text-slate-300">{w.wins}</span></div>
+                                          <div><span className="text-orange-500 font-bold">Adj:</span> <span className="text-slate-300">{w.challenges}</span></div>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  )}
+              </div>
+          </div>
       </div>
   );
 
   const renderQuarterlyView = () => {
-    // 1. Prepare Data for Charts
-    // Filter last 90 days
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    const recentLogs = userData.dailyLogs
-        .filter(l => new Date(l.date) > ninetyDaysAgo)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      // Calculate Stats
+      const recentLogs = userData.dailyLogs.slice(0, 90); // Approx 3 months
+      const avgEnergy = recentLogs.length 
+        ? (recentLogs.reduce((a, b) => a + b.energyLevel, 0) / recentLogs.length).toFixed(1) 
+        : '0';
+      
+      const anchorCounts: Record<string, number> = {};
+      recentLogs.forEach(l => {
+          anchorCounts[l.anchorUsed] = (anchorCounts[l.anchorUsed] || 0) + 1;
+      });
+      const topAnchor = Object.entries(anchorCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
-    // Calculate Average Energy
-    const avgEnergy = recentLogs.length > 0 
-        ? (recentLogs.reduce((acc, curr) => acc + curr.energyLevel, 0) / recentLogs.length).toFixed(1) 
-        : '-';
+      // Graph Data
+      const graphData = recentLogs.slice(0, 14).reverse().map(l => ({
+          name: new Date(l.date).getDate(),
+          energy: l.energyLevel
+      }));
 
-    // Format for Recharts
-    const chartData = recentLogs.map(l => ({
-        date: new Date(l.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-        energy: l.energyLevel
-    }));
+      return (
+        <div className="space-y-8 animate-fade-in max-w-5xl">
+            <header>
+                <h2 className="text-2xl font-bold text-white mb-2">{t.quarterlyTitle}</h2>
+                <p className="text-slate-400 text-base">{t.quarterlyDesc}</p>
+            </header>
 
-    // Find High Energy Moments (4 or 5)
-    const highEnergyMoments = recentLogs.filter(l => l.energyLevel >= 4).reverse().slice(0, 5);
+            <div className="grid md:grid-cols-3 gap-8">
+                 {/* Left: Stats Panel */}
+                 <div className="space-y-6">
+                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">{t.quarterlyRewind}</h3>
+                         
+                         <div className="grid grid-cols-2 gap-4 mb-6">
+                             <div className="bg-slate-800 p-3 rounded-lg">
+                                 <div className="text-xs text-slate-500">{t.totalLogs}</div>
+                                 <div className="text-xl font-bold text-white">{recentLogs.length}</div>
+                             </div>
+                             <div className="bg-slate-800 p-3 rounded-lg">
+                                 <div className="text-xs text-slate-500">{t.avgEnergy}</div>
+                                 <div className="text-xl font-bold text-yellow-400">{avgEnergy}</div>
+                             </div>
+                         </div>
+                         
+                         <div className="mb-6">
+                             <div className="text-xs text-slate-500 mb-1">{t.topAnchor}</div>
+                             <div className="text-lg font-bold text-primary-400">{topAnchor}</div>
+                         </div>
 
-    return (
-      <div className="space-y-8 animate-fade-in w-full max-w-6xl mx-auto">
-           <header>
-               <h2 className="text-2xl font-bold text-white mb-2">{t.quarterlyTitle}</h2>
-               <p className="text-slate-400 text-base">{t.quarterlyDesc}</p>
-           </header>
+                         <div className="h-32 w-full">
+                             <div className="text-xs text-slate-500 mb-2">{t.trendLine}</div>
+                             <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={graphData}>
+                                    <Line type="monotone" dataKey="energy" stroke="#818cf8" strokeWidth={2} dot={false} />
+                                    <YAxis domain={[1, 5]} hide />
+                                </LineChart>
+                             </ResponsiveContainer>
+                         </div>
+                     </div>
+                 </div>
 
-           {/* Rewind Stats */}
-           <div className="grid grid-cols-3 gap-4 mb-8">
-               <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                   <div className="text-2xl font-bold text-white">{recentLogs.length}</div>
-                   <div className="text-xs text-slate-500 uppercase tracking-wider">{t.totalLogs}</div>
-               </div>
-               <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                   <div className="text-2xl font-bold text-white">{userData.weeklyReflections.length}</div>
-                   <div className="text-xs text-slate-500 uppercase tracking-wider">{t.weekly}</div>
-               </div>
-               <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                   <div className="text-2xl font-bold text-green-400">{avgEnergy}</div>
-                   <div className="text-xs text-slate-500 uppercase tracking-wider">{t.avgEnergy}</div>
-               </div>
-           </div>
+                 {/* Center/Right: Questions */}
+                 <div className="md:col-span-2 space-y-6">
+                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                         <h3 className="font-semibold text-white mb-6">Strategic Check-In</h3>
+                         
+                         <div className="space-y-5">
+                             {[
+                                 { l: t.q_shifted, h: t.q_shifted_help, k: 'shifted' },
+                                 { l: t.q_flow, h: t.q_flow_help, k: 'creatingFlow' },
+                                 { l: t.q_adjust, h: t.q_adjust_help, k: 'needsAdjustment' },
+                                 { l: t.q_emerging, h: t.q_emerging_help, k: 'emerging' }
+                             ].map((q, i) => (
+                                 <div key={i}>
+                                     <label className="block text-sm font-bold text-white mb-1">{q.l}</label>
+                                     <p className="text-xs text-slate-400 mb-2">{q.h}</p>
+                                     <textarea 
+                                         // @ts-ignore
+                                         value={quarterlyData[q.k]}
+                                         // @ts-ignore
+                                         onChange={(e) => setQuarterlyData({...quarterlyData, [q.k]: e.target.value})}
+                                         className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-20 focus:ring-1 focus:ring-primary-500 resize-none"
+                                     />
+                                 </div>
+                             ))}
+                         </div>
 
-           {/* MAIN DASHBOARD LAYOUT */}
-           <div className="grid lg:grid-cols-2 gap-8">
-               
-               {/* LEFT COLUMN: EVIDENCE DASHBOARD */}
-               <div className="space-y-6">
-                   {/* Trend Chart */}
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                       <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2"><TrendingUp size={16}/> {t.trendLine}</h3>
-                       <div className="h-48 w-full">
-                           {chartData.length > 1 ? (
-                               <ResponsiveContainer width="100%" height="100%">
-                                   <LineChart data={chartData}>
-                                       <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                       <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickMargin={10} />
-                                       <YAxis domain={[0, 5]} stroke="#94a3b8" fontSize={10} />
-                                       <Tooltip 
-                                           contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                                           itemStyle={{ color: '#e2e8f0' }}
-                                       />
-                                       <Line type="monotone" dataKey="energy" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: '#6366f1' }} activeDot={{ r: 6 }} />
-                                   </LineChart>
-                               </ResponsiveContainer>
-                           ) : (
-                               <div className="h-full flex items-center justify-center text-slate-600 italic text-sm border-2 border-dashed border-slate-800 rounded">
-                                   {t.noDataYet}
-                               </div>
-                           )}
-                       </div>
-                   </div>
+                         <div className="mt-8 flex justify-end">
+                             <button 
+                                onClick={saveAndAnalyzeQuarterly}
+                                disabled={isAnalyzingQuarter}
+                                className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-lg disabled:opacity-50"
+                             >
+                                {isAnalyzingQuarter ? <Loader2 className="animate-spin" /> : <Sparkles size={18} />}
+                                {t.saveAndAnalyze}
+                             </button>
+                         </div>
+                     </div>
 
-                   {/* High Energy Reel */}
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl flex-1 flex flex-col max-h-[500px]">
-                       <h3 className="text-sm font-bold text-yellow-400 mb-2 flex items-center gap-2"><Flame size={16}/> {t.highEnergyReel}</h3>
-                       <p className="text-xs text-slate-500 mb-4">{t.highEnergyDesc}</p>
-                       
-                       <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                           {highEnergyMoments.length === 0 && <div className="text-slate-600 text-sm text-center py-4">{t.noDataYet}</div>}
-                           {highEnergyMoments.map(l => (
-                               <div key={l.id} className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
-                                   <div className="flex justify-between items-center mb-1">
-                                       <span className="text-xs text-slate-400">{new Date(l.date).toLocaleDateString()}</span>
-                                       <div className="flex">{[...Array(l.energyLevel)].map((_, i) => <Zap key={i} size={10} className="text-yellow-500" fill="currentColor"/>)}</div>
-                                   </div>
-                                   <div className="text-xs font-bold text-primary-300 mb-1">{l.anchorUsed}</div>
-                                   <p className="text-sm text-slate-200">{l.reflection}</p>
-                               </div>
-                           ))}
-                       </div>
-                   </div>
-               </div>
+                     {/* Analysis Result Display */}
+                     {latestQuarterlyAnalysis && (
+                         <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 p-6 rounded-xl animate-fade-in">
+                             <h3 className="font-bold text-indigo-300 flex items-center gap-2 mb-4">
+                                 <Sparkles size={18} /> {t.strategicOutlook}
+                             </h3>
+                             <div className="space-y-4">
+                                 <div>
+                                     <h4 className="text-sm font-bold text-white mb-2">{t.themesObserved}</h4>
+                                     <ul className="list-disc list-inside text-slate-300 text-sm space-y-1">
+                                         {latestQuarterlyAnalysis.themes.map((th, i) => <li key={i}>{th}</li>)}
+                                     </ul>
+                                 </div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-white mb-1">{t.growthTrajectory}</h4>
+                                     <p className="text-slate-300 text-sm leading-relaxed">{latestQuarterlyAnalysis.growthTrajectory}</p>
+                                 </div>
+                                 <div className="bg-indigo-950/50 p-3 rounded-lg border border-indigo-500/20">
+                                     <h4 className="text-sm font-bold text-indigo-200 mb-1">{t.nextQuarterFocus}</h4>
+                                     <p className="text-white text-base font-medium">{latestQuarterlyAnalysis.nextQuarterFocus}</p>
+                                 </div>
+                             </div>
+                         </div>
+                     )}
 
-               {/* RIGHT COLUMN: REFLECTION INPUTS */}
-               <div className="space-y-6">
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                       <label className="block text-sm font-bold text-slate-300 mb-2">{t.q_shifted}</label>
-                       <textarea 
-                           value={quarterlyData.shifted}
-                           onChange={e => setQuarterlyData({...quarterlyData, shifted: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
-                           placeholder={t.q_shifted_help}
-                       />
-                   </div>
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                       <label className="block text-sm font-bold text-slate-300 mb-2">{t.q_flow}</label>
-                       <textarea 
-                           value={quarterlyData.creatingFlow}
-                           onChange={e => setQuarterlyData({...quarterlyData, creatingFlow: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
-                           placeholder={t.q_flow_help}
-                       />
-                   </div>
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                       <label className="block text-sm font-bold text-slate-300 mb-2">{t.q_adjust}</label>
-                       <textarea 
-                           value={quarterlyData.needsAdjustment}
-                           onChange={e => setQuarterlyData({...quarterlyData, needsAdjustment: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
-                           placeholder={t.q_adjust_help}
-                       />
-                   </div>
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                       <label className="block text-sm font-bold text-slate-300 mb-2">{t.q_emerging}</label>
-                       <textarea 
-                           value={quarterlyData.emerging}
-                           onChange={e => setQuarterlyData({...quarterlyData, emerging: e.target.value})}
-                           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white h-24 resize-none focus:ring-1 focus:ring-primary-500"
-                           placeholder={t.q_emerging_help}
-                       />
-                   </div>
-
-                   <button 
-                       onClick={saveAndAnalyzeQuarterly}
-                       disabled={isAnalyzingQuarter || !quarterlyData.shifted}
-                       className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
-                   >
-                       {isAnalyzingQuarter ? <Loader2 className="animate-spin" /> : <BarChart />} {t.saveAndAnalyze}
-                   </button>
-               </div>
-           </div>
-
-           {/* Analysis Result (Bottom) */}
-           {latestQuarterlyAnalysis && (
-                <div className="bg-gradient-to-br from-slate-900 to-indigo-900/40 border border-indigo-500/30 p-8 rounded-xl animate-fade-in relative overflow-hidden mt-8">
-                        <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={60}/></div>
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><Sparkles className="text-indigo-400"/> {t.strategicOutlook}</h3>
-                        
-                        <div className="space-y-6">
-                            <div>
-                                <h4 className="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-2">{t.themesObserved}</h4>
-                                <ul className="list-disc pl-5 space-y-1 text-slate-300 text-sm">
-                                    {latestQuarterlyAnalysis.themes.map((th, i) => <li key={i}>{th}</li>)}
-                                </ul>
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-green-400 uppercase tracking-wider mb-2">{t.growthTrajectory}</h4>
-                                <p className="text-slate-200 text-sm leading-relaxed">{latestQuarterlyAnalysis.growthTrajectory}</p>
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-yellow-400 uppercase tracking-wider mb-2">{t.nextQuarterFocus}</h4>
-                                <div className="bg-yellow-900/20 border border-yellow-500/30 p-4 rounded-lg text-yellow-100 text-lg font-medium text-center">
-                                    "{latestQuarterlyAnalysis.nextQuarterFocus}"
-                                </div>
-                            </div>
-                        </div>
-                </div>
-            )}
-      </div>
-    );
+                     {/* Past Check-ins */}
+                     {userData.quarterlyCheckIns.length > 0 && (
+                         <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                              <h3 className="font-semibold text-white mb-4">{t.pastCheckIns}</h3>
+                              <div className="space-y-4">
+                                  {userData.quarterlyCheckIns.map(q => (
+                                      <div key={q.id} className="border-b border-slate-800 pb-4 last:border-0">
+                                          <div className="flex justify-between items-center mb-2">
+                                              <span className="text-sm text-slate-400">{new Date(q.date).toLocaleDateString()}</span>
+                                              {q.aiAnalysis && <span className="text-xs bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded-full">{t.analyzedTag}</span>}
+                                          </div>
+                                          <p className="text-white text-sm line-clamp-2">{q.shifted}</p>
+                                      </div>
+                                  ))}
+                              </div>
+                         </div>
+                     )}
+                 </div>
+            </div>
+        </div>
+      );
   };
 
   const renderSettingsView = () => (
-      <div className="space-y-8 animate-fade-in max-w-2xl mx-auto">
-          <div>
-               <h2 className="text-2xl font-bold text-white mb-2">{t.settingsTitle}</h2>
-               <p className="text-slate-400 text-base">{t.dataVault}</p>
-          </div>
+      <div className="space-y-8 animate-fade-in max-w-3xl">
+          <header>
+              <h2 className="text-2xl font-bold text-white mb-2">{t.settingsTitle}</h2>
+              <p className="text-slate-400 text-base">{t.settingsTitle} - {t.dataVault}</p>
+          </header>
 
-          {/* Backup & Restore */}
-          <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl space-y-6">
-              <div className="flex items-start gap-4">
-                  <div className="bg-blue-900/30 p-3 rounded-full text-blue-400"><Database size={24}/></div>
-                  <div>
-                      <h3 className="text-lg font-bold text-white mb-1">{t.backupTitle}</h3>
-                      <p className="text-sm text-slate-400">{t.backupDesc}</p>
-                  </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4 pt-4">
-                  <button 
-                      onClick={handleExportData}
-                      className="bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center gap-2 transition-colors group"
-                  >
-                      <Download size={24} className="text-blue-400 group-hover:scale-110 transition-transform"/>
-                      <span className="font-semibold">{t.downloadBackup}</span>
-                  </button>
-
-                  <div className="relative">
-                      <input 
-                          type="file" 
-                          accept=".json"
-                          onChange={handleImportData}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      />
-                      <div className="bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center gap-2 transition-colors h-full group">
-                          <Upload size={24} className="text-green-400 group-hover:scale-110 transition-transform"/>
-                          <span className="font-semibold">{t.restoreBackup}</span>
-                      </div>
-                  </div>
-              </div>
-          </div>
-
-          {/* Manifesto Generator */}
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-900/20 border border-slate-800 p-8 rounded-xl space-y-6">
-              <div className="flex items-start gap-4">
-                  <div className="bg-indigo-900/30 p-3 rounded-full text-indigo-400"><Award size={24}/></div>
-                  <div>
-                      <h3 className="text-lg font-bold text-white mb-1">{t.manifestoTitle}</h3>
-                      <p className="text-sm text-slate-400">{t.manifestoDesc}</p>
-                  </div>
-              </div>
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+              <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><Database size={20} className="text-blue-400" /> {t.backupTitle}</h3>
+              <p className="text-slate-400 text-sm mb-6">{t.backupDesc}</p>
               
-              <button 
+              <div className="flex flex-col sm:flex-row gap-4">
+                  <button 
+                     onClick={handleExportData}
+                     className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-3 rounded-lg border border-slate-700 flex items-center justify-center gap-2 transition-colors"
+                  >
+                      <Download size={18} /> {t.downloadBackup}
+                  </button>
+                  <label className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-3 rounded-lg border border-slate-700 flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                      <Upload size={18} /> {t.restoreBackup}
+                      <input type="file" accept=".json" onChange={handleImportData} className="hidden" />
+                  </label>
+              </div>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+               <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><BookOpen size={20} className="text-primary-400" /> {t.manifestoTitle}</h3>
+               <p className="text-slate-400 text-sm mb-6">{t.manifestoDesc}</p>
+
+               <button 
                   onClick={handleCopyManifesto}
-                  className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"
-              >
-                  <Copy size={18}/> {t.copyManifesto}
-              </button>
+                  className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors"
+               >
+                   <Copy size={18} /> {t.copyManifesto}
+               </button>
+          </div>
+          
+          <div className="text-center text-slate-600 text-xs mt-8">
+              <p>Dynamic Strength Workbook v2.0</p>
+              <p>Local Storage Persistence Active</p>
           </div>
       </div>
   );
 
   return (
-    <Layout currentView={view} setView={setView} language={language} setLanguage={setLanguage}>
+    <Layout 
+        currentView={view} 
+        setView={setView} 
+        language={language} 
+        setLanguage={setLanguage}
+        privacyMode={privacyMode}
+        togglePrivacyMode={handleTogglePrivacy}
+    >
+        {/* Inject Global Styles for Privacy Mode */}
+        <style>{`
+          .privacy-blur textarea, 
+          .privacy-blur input[type="text"] {
+             filter: blur(8px);
+             transition: filter 0.3s ease;
+             cursor: pointer;
+          }
+          .privacy-blur textarea:hover, 
+          .privacy-blur input[type="text"]:focus,
+          .privacy-blur input[type="text"]:hover {
+             filter: none;
+          }
+          /* Custom Scrollbar update */
+          ::-webkit-scrollbar { width: 8px; }
+          ::-webkit-scrollbar-track { background: #1e293b; }
+          ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+          ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        `}</style>
+
       {view === 'welcome' && renderWelcomeView()}
       {view === 'discovery' && renderDiscoveryView()}
       {view === 'phase1' && renderPhase1View()}

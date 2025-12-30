@@ -150,6 +150,16 @@ export const TRANSLATIONS = {
     whatIsAnchor: "What is an Anchor?",
     noPatternsFound: "No patterns found yet.",
     anchorPlaceholder: "Core Anchor #",
+    
+    // Constellation (New)
+    constellationTitle: "Strength Constellation",
+    constellationDesc: "Visualizing your evidence network. Hover over an anchor to see which stories support it.",
+    unconnected: "Unconnected Stories",
+
+    // Privacy Guard (New)
+    privacyMode: "Privacy Guard",
+    privacyOn: "Privacy Guard Active. Hover over blurred text to read it.",
+    privacyOff: "Privacy Guard Disabled.",
 
     // Phase 3: Scale
     phase3Title: "Phase 3: Evaluate & Scale",
@@ -291,12 +301,12 @@ export const TRANSLATIONS = {
             "**1. The Rule of 5:** A strength isn't proven by a single story. Aim to capture **4-5 stories** across different life areas (Work, Relationships, Crisis) to build a 'Constellation of Evidence'.",
             "**2. Your AI Partner:** The Strength Coach isn't just a chatbot. It's an **Experience Engineer**. It will interview you to uncover patterns you might miss. Let it guide you.",
             "**3. The Process:** \n- **Discovery:** Identify hypotheses.\n- **Phase 1:** Gather evidence (The Constellation).\n- **Phase 2:** Define Anchors & Boundaries.\n- **Phase 3:** Scale with 5% Shifts.",
-            "**4. Daily Practice:** Once setup is complete, use the **Dashboard** to log small daily wins. This builds the data for your Quarterly Reviews."
+            "**4. Privacy Guard:** Working in a public space? Toggle the **Eye Icon** in the sidebar. This blurs your text until you hover over it, keeping your reflections private."
         ],
         phases: [
             { title: "Discovery", desc: "Identify initial hypotheses using the AI Strength Spotter or Migration Arc." },
             { title: "Phase 1: Weigh & Assess", desc: "Build your Constellation of Evidence. Gather 4-5 stories from diverse contexts (Work, Home, Crisis) to prove your strengths are real and transferable." },
-            { title: "Phase 2: Venture", desc: "Define your 'Directional Intention'. Convert evidence into Core Anchors and set clear Boundaries against energy drains." },
+            { title: "Phase 2: Venture", desc: "Define your 'Directional Intention'. View your **Strength Constellation** to see which anchors are best supported by evidence." },
             { title: "Phase 3: Evaluate & Scale", desc: "Turn anchors into action. Design specific '5% Shift' micro-practices for high-impact territories." },
             { title: "Daily Routine", desc: "The engine room. Log your daily practice, track energy levels, and get instant 'Strength Sparks' (feedback) from the AI." }
         ]
@@ -469,6 +479,16 @@ export const TRANSLATIONS = {
     whatIsAnchor: "什麼是錨點？",
     noPatternsFound: "尚未發現模式。",
     anchorPlaceholder: "核心錨點 #",
+    
+    // Constellation (New)
+    constellationTitle: "優勢星系圖",
+    constellationDesc: "視覺化你的證據網絡。將滑鼠懸停在錨點上，查看哪些故事支持它。",
+    unconnected: "未連結的故事",
+
+    // Privacy Guard (New)
+    privacyMode: "私隱保護模式",
+    privacyOn: "私隱保護已啟動。將滑鼠懸停在模糊文字上即可閱讀。",
+    privacyOff: "私隱保護已關閉。",
 
     // Phase 3
     phase3Title: "第三階段：評估與擴展",
@@ -610,12 +630,12 @@ export const TRANSLATIONS = {
             "**1. 五項法則 (The Rule of 5)：** 一個故事不足以證明優勢。目標是在不同生活範疇（工作、關係、危機）收集 **4-5 個故事**，建立你的「優勢星系 (Constellation of Evidence)」。",
             "**2. 你的 AI 夥伴：** 優勢教練不僅僅是聊天機器人，它是你的 **體驗工程師**。它會透過訪談幫你挖掘你可能忽略的模式。請讓它引導你。",
             "**3. 流程：** \n- **發掘：** 識別假設。\n- **第一階段：** 收集證據（星系）。\n- **第二階段：** 定義錨點與界線。\n- **第三階段：** 透過 5% 微調進行擴展。",
-            "**4. 每日練習：** 設定完成後，使用 **每日日常** 記錄小勝利。這將為你的季度檢視累積數據。"
+            "**4. 私隱保護 (Privacy Guard)：** 在公共場合？點擊側邊欄的 **眼睛圖示**。這會模糊你的文字，直到你將滑鼠懸停在上面，保護你的私隱。"
         ],
         phases: [
             { title: "發掘優勢", desc: "使用 AI 優勢識別器或移民歷程問題識別初步假設。" },
             { title: "第一階段：衡量與評估", desc: "建立你的證據星系。收集 4-5 個來自不同情境（工作、家庭、危機）的故事，以證明你的優勢是真實且可轉移的。" },
-            { title: "第二階段：探索", desc: "定義你的「方向性意圖」。將證據轉化為核心錨點，並針對能量消耗設定清晰的界線。" },
+            { title: "第二階段：探索", desc: "定義你的「方向性意圖」。查看你的 **優勢星系圖**，看看哪些錨點有最強的證據支持。" },
             { title: "第三階段：評估與擴展", desc: "將錨點轉化為行動。為高影響力的生活範疇設計具體的「5% 微調」練習。" },
             { title: "每日日常", desc: "引擎室。記錄你的每日練習、追蹤能量，並獲得 AI 的即時「優勢回響」(Strength Sparks)。" }
         ]
