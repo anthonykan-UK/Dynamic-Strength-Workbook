@@ -11,7 +11,7 @@ import { GenerateContentResponse } from '@google/genai';
 // --- FEATURE FLAG ---
 // Set to TRUE only when Voice AI is fully tested and native-sounding.
 // Currently disabled to prevent poor UX (interruptions, robotic tone).
-const VOICE_MODE_ENABLED = false;
+const VOICE_MODE_ENABLED = true;
 
 interface CoachProps {
   userData: UserData;
