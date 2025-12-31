@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   UserData, 
@@ -7,7 +8,6 @@ import {
   Story, 
   TERRITORIES, 
   DailyLog,
-  COMMON_STRENGTHS,
   QuarterlyCheckIn,
   WeeklyReflection
 } from './types';
@@ -70,7 +70,14 @@ export default function App() {
     const saved = localStorage.getItem('dsw_strength_data');
     if (saved) {
         try {
-             return JSON.parse(saved);
+             const parsed = JSON.parse(saved);
+             // Migration for Evidence Bank and Pool
+             return {
+                 ...INITIAL_USER_DATA,
+                 ...parsed,
+                 evidenceBank: parsed.evidenceBank || parsed.externalStories || [], // Migration
+                 strengthPool: parsed.strengthPool || [] // Migration
+             };
         } catch(e) { console.error("Parse error", e); return INITIAL_USER_DATA; }
     }
 
@@ -83,7 +90,9 @@ export default function App() {
             return {
                 ...INITIAL_USER_DATA,
                 ...parsed,
-                internalAudit: { ...INITIAL_USER_DATA.internalAudit, ...(parsed.internalAudit || {}) }
+                internalAudit: { ...INITIAL_USER_DATA.internalAudit, ...(parsed.internalAudit || {}) },
+                evidenceBank: parsed.externalStories || [],
+                strengthPool: []
             };
         } catch(e) {
             console.error("Legacy migration error", e);
@@ -121,7 +130,6 @@ export default function App() {
   // Discovery View State
   const [discoveryReflection, setDiscoveryReflection] = useState('');
   const [isDiscovering, setIsDiscovering] = useState(false);
-  const [selectedDiscoveryStrengths, setSelectedDiscoveryStrengths] = useState<string[]>([]);
   const [promptIndex, setPromptIndex] = useState(0);
   
   // BNO Deck State - Journey
@@ -172,20 +180,18 @@ export default function App() {
 
   // --- Effects ---
   useEffect(() => {
-    localStorage.setItem('dsw_strength_data', JSON.stringify(userData));
+    // Ensure data structure is maintained on save, mapping evidenceBank back to externalStories for compatibility if needed? 
+    // No, we strictly use evidenceBank now. But we update externalStories for legacy readers if any.
+    const toSave = {
+        ...userData,
+        externalStories: userData.evidenceBank // Keep them in sync for any logic that might look there
+    };
+    localStorage.setItem('dsw_strength_data', JSON.stringify(toSave));
   }, [userData]);
 
   useEffect(() => {
     localStorage.setItem('dsw_language', language);
   }, [language]);
-
-  // Pre-populate discovery selections if data exists
-  useEffect(() => {
-      const existing = userData.assessmentStrengths?.filter(Boolean) || [];
-      if (existing.length > 0) {
-          setSelectedDiscoveryStrengths(existing);
-      }
-  }, [userData.assessmentStrengths]);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -205,20 +211,20 @@ export default function App() {
     setUserData({ ...userData, assessmentStrengths: newStrengths });
   };
 
-  const addStory = () => {
+  const addEvidence = () => {
     const newStory: Story = { id: crypto.randomUUID(), text: '' };
-    setUserData({ ...userData, externalStories: [...userData.externalStories, newStory] });
+    setUserData({ ...userData, evidenceBank: [...userData.evidenceBank, newStory] });
   };
 
-  const updateStory = (id: string, field: keyof Story, value: string) => {
-    const newStories = userData.externalStories.map(s => 
+  const updateEvidence = (id: string, field: keyof Story, value: string) => {
+    const newStories = userData.evidenceBank.map(s => 
       s.id === id ? { ...s, [field]: value } : s
     );
-    setUserData({ ...userData, externalStories: newStories });
+    setUserData({ ...userData, evidenceBank: newStories });
   };
 
-  const deleteStory = (id: string) => {
-    setUserData({ ...userData, externalStories: userData.externalStories.filter(s => s.id !== id) });
+  const deleteEvidence = (id: string) => {
+    setUserData({ ...userData, evidenceBank: userData.evidenceBank.filter(s => s.id !== id) });
   };
 
   const handleAnalyzeStory = async (story: Story) => {
@@ -229,7 +235,7 @@ export default function App() {
     setAnalyzingStoryId(story.id);
     try {
       const result = await analyzeStoryWithAI(story.text, language);
-      const newStories = userData.externalStories.map(s => 
+      const newStories = userData.evidenceBank.map(s => 
         s.id === story.id ? { 
           ...s, 
           action: result.action, 
@@ -237,7 +243,7 @@ export default function App() {
           pattern: result.pattern 
         } : s
       );
-      setUserData({ ...userData, externalStories: newStories });
+      setUserData({ ...userData, evidenceBank: newStories });
       showNotification(t.notifications.storyAnalyzed);
     } catch (e) {
       showNotification(t.notifications.failedAnalyze);
@@ -399,8 +405,11 @@ export default function App() {
           setIsDiscovering(true);
           try {
               const suggestions = await analyzeJourneyWithAI(newAnswers, language);
-              const combined = Array.from(new Set([...selectedDiscoveryStrengths, ...suggestions])).slice(0, 5);
-              setSelectedDiscoveryStrengths(combined);
+              // Add to Strength Pool
+              setUserData(prev => ({
+                  ...prev,
+                  strengthPool: Array.from(new Set([...prev.strengthPool, ...suggestions]))
+              }));
               showNotification(t.notifications.strengthsIdentified);
               setIsJourneyActive(false); // Reset to summary view
           } catch(e) {
@@ -417,8 +426,11 @@ export default function App() {
       setIsDiscovering(true);
       try {
           const suggestions = await discoverStrengthsWithAI(discoveryReflection, language);
-          const combined = Array.from(new Set([...selectedDiscoveryStrengths, ...suggestions])).slice(0, 5);
-          setSelectedDiscoveryStrengths(combined);
+          // Add to Strength Pool
+          setUserData(prev => ({
+              ...prev,
+              strengthPool: Array.from(new Set([...prev.strengthPool, ...suggestions]))
+          }));
           showNotification(t.notifications.strengthsIdentified);
       } catch (e) {
           showNotification(t.notifications.failedReflect);
@@ -427,24 +439,24 @@ export default function App() {
       }
   };
 
-  const toggleDiscoveryStrength = (s: string) => {
-      if (selectedDiscoveryStrengths.includes(s)) {
-          setSelectedDiscoveryStrengths(prev => prev.filter(i => i !== s));
+  // Toggle from Pool to Top 5
+  const togglePoolStrength = (s: string) => {
+      const currentTop5 = userData.assessmentStrengths;
+      if (currentTop5.includes(s)) {
+          // Remove from Top 5
+          const newTop5 = currentTop5.map(v => v === s ? "" : v);
+           setUserData({...userData, assessmentStrengths: newTop5});
       } else {
-          if (selectedDiscoveryStrengths.length >= 5) {
+          // Add to Top 5
+          const emptyIndex = currentTop5.findIndex(v => !v);
+          if (emptyIndex === -1) {
               showNotification(t.notifications.maxStrengths);
               return;
           }
-          setSelectedDiscoveryStrengths(prev => [...prev, s]);
+          const newTop5 = [...currentTop5];
+          newTop5[emptyIndex] = s;
+          setUserData({...userData, assessmentStrengths: newTop5});
       }
-  };
-
-  const saveDiscoveryToPhase1 = () => {
-      const newStrengths = [...selectedDiscoveryStrengths];
-      while(newStrengths.length < 5) newStrengths.push("");
-      setUserData({ ...userData, assessmentStrengths: newStrengths });
-      showNotification(t.notifications.savedPhase1);
-      setView('phase1');
   };
 
   const nextPrompt = () => {
@@ -605,7 +617,7 @@ export default function App() {
           try {
               const importedData = JSON.parse(e.target?.result as string);
               // Basic validation check
-              if (importedData.assessmentStrengths && Array.isArray(importedData.dailyLogs)) {
+              if (Array.isArray(importedData.dailyLogs)) {
                  if (window.confirm(t.restoreWarning)) {
                      // Merge carefully or replace? Replace is safer for "Restore"
                      setUserData(importedData);
@@ -626,7 +638,7 @@ export default function App() {
   const handleCopyManifesto = () => {
       const strengths = userData.assessmentStrengths.filter(Boolean).join(", ");
       const anchors = userData.coreAnchors.filter(Boolean).join(", ");
-      const stories = userData.externalStories.map(s => `- ${s.pattern}: "${s.text}"`).join("\n");
+      const stories = userData.evidenceBank.map(s => `- ${s.pattern}: "${s.text}"`).join("\n");
       
       const manifesto = `
 # MY STRENGTH MANIFESTO
@@ -652,6 +664,7 @@ ${stories}
 
   // --- Render Views ---
 
+  // (Welcome, Discovery, Phase1, Phase2, Phase3, Dashboard, Weekly views truncated for brevity, identical to existing except for renderQuarterlyView)
   const renderWelcomeView = () => (
     <div className="space-y-8 animate-fade-in">
       <div className="bg-gradient-to-br from-primary-600 to-indigo-800 p-8 rounded-2xl shadow-xl text-white">
@@ -867,53 +880,54 @@ ${stories}
                     )}
                 </div>
 
-                <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                {/* Pool Display (Previously Top 5 Hypothesis) */}
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl flex flex-col">
                     <h3 className="font-semibold text-white mb-2">{t.selectedHypothesis}</h3>
-                    <p className="text-sm text-slate-500 mb-4">{t.selectUpTo5}</p>
-                    
-                    <div className="space-y-2">
-                        {selectedDiscoveryStrengths.map((s, i) => (
-                            <div key={i} className="flex justify-between items-center bg-primary-600/20 border border-primary-500/30 px-3 py-3 rounded-lg text-white">
-                                <span className="text-base">{i+1}. {s}</span>
-                                <button onClick={() => toggleDiscoveryStrength(s)} className="text-slate-400 hover:text-white p-1">
-                                    <X size={16} />
-                                </button>
+                    <div className="space-y-2 mb-6">
+                        {userData.assessmentStrengths.map((s, i) => (
+                            <div key={i} className={`flex justify-between items-center border px-3 py-3 rounded-lg ${s ? 'bg-primary-600/20 border-primary-500/30 text-white' : 'border-dashed border-slate-800 text-slate-500'}`}>
+                                <span className="text-base">{s ? `${i+1}. ${s}` : `${t.slotEmpty} ${i+1}`}</span>
+                                {s && (
+                                    <button onClick={() => togglePoolStrength(s)} className="text-slate-400 hover:text-white p-1">
+                                        <X size={16} />
+                                    </button>
+                                )}
                             </div>
-                        ))}
-                        {[...Array(5 - selectedDiscoveryStrengths.length)].map((_, i) => (
-                             <div key={i} className="border border-dashed border-slate-800 px-3 py-3 rounded-lg text-slate-600 text-sm">
-                                 {t.slotEmpty} {selectedDiscoveryStrengths.length + i + 1}
-                             </div>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* Selection Grid Column */}
+            {/* Strength Pool Selection Column */}
             <div>
-                 <h3 className="font-semibold text-white mb-4">{t.quickSelect}</h3>
-                 <div className="flex flex-wrap gap-2">
-                     {COMMON_STRENGTHS.map(s => (
-                         <button
-                            key={s}
-                            onClick={() => toggleDiscoveryStrength(s)}
-                            className={`px-3 py-2 rounded-full text-sm border transition-all ${
-                                selectedDiscoveryStrengths.includes(s)
-                                ? 'bg-primary-600 border-primary-500 text-white shadow-lg shadow-primary-500/20'
-                                : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'
-                            }`}
-                         >
-                             {s}
-                         </button>
-                     ))}
-                 </div>
+                 <h3 className="font-semibold text-white mb-4">Discovered Strength Pool</h3>
+                 {userData.strengthPool.length === 0 ? (
+                     <div className="text-slate-500 text-sm italic border-2 border-dashed border-slate-800 p-6 rounded-xl text-center">
+                         No strengths discovered yet. Use the AI Guide or Reflection Prompts.
+                     </div>
+                 ) : (
+                     <div className="flex flex-wrap gap-2">
+                         {userData.strengthPool.map(s => (
+                             <button
+                                key={s}
+                                onClick={() => togglePoolStrength(s)}
+                                className={`px-3 py-2 rounded-full text-sm border transition-all ${
+                                    userData.assessmentStrengths.includes(s)
+                                    ? 'bg-primary-600 border-primary-500 text-white shadow-lg shadow-primary-500/20'
+                                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
+                                }`}
+                             >
+                                 {s}
+                             </button>
+                         ))}
+                     </div>
+                 )}
             </div>
         </div>
 
         <div className="flex justify-end pt-6 border-t border-slate-800">
              <button 
-                onClick={saveDiscoveryToPhase1}
-                disabled={selectedDiscoveryStrengths.length === 0}
+                onClick={() => setView('phase1')}
                 className="bg-primary-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-primary-500 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-base"
              >
                 {t.saveStartPhase1} <ArrowRight size={18} />
@@ -924,7 +938,6 @@ ${stories}
   };
 
   const renderPhase1View = () => (
-    // ... (No changes in Phase 1)
     <div className="space-y-8 animate-fade-in max-w-4xl">
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">{t.phase1Title}</h2>
@@ -962,16 +975,34 @@ ${stories}
            
            <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                <h3 className="font-semibold text-white mb-4">{t.top5Hypothesis}</h3>
-               <div className="space-y-2">
+               {/* Top 5 Slots */}
+               <div className="space-y-2 mb-4">
                   {userData.assessmentStrengths.map((s, i) => (
-                      <input 
-                         key={i}
-                         value={s}
-                         onChange={e => updateAssessmentStrength(i, e.target.value)}
-                         placeholder={`${t.strengthPlaceholder}${i+1}`}
-                         className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white"
-                      />
+                      <div key={i} className="flex gap-2">
+                           <input 
+                              value={s}
+                              onChange={e => updateAssessmentStrength(i, e.target.value)}
+                              placeholder={`${t.strengthPlaceholder}${i+1}`}
+                              className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white"
+                           />
+                      </div>
                   ))}
+               </div>
+               
+               {/* Strength Pool */}
+               <div className="pt-4 border-t border-slate-800">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">From Pool</h4>
+                    <div className="flex flex-wrap gap-2">
+                        {userData.strengthPool.filter(s => !userData.assessmentStrengths.includes(s)).map(s => (
+                             <button
+                                key={s}
+                                onClick={() => togglePoolStrength(s)}
+                                className="px-2 py-1 rounded bg-slate-800 text-xs text-slate-400 border border-slate-700 hover:text-white hover:border-slate-500"
+                             >
+                                + {s}
+                             </button>
+                        ))}
+                    </div>
                </div>
            </div>
         </div>
@@ -981,21 +1012,21 @@ ${stories}
              <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl min-h-[600px] flex flex-col">
                  <div className="flex justify-between items-center mb-2">
                      <h3 className="font-semibold text-white flex items-center gap-2"><BookOpen className="text-blue-400" /> {t.assessTitle}</h3>
-                     <button onClick={addStory} className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded-full flex items-center gap-1 border border-slate-600">
+                     <button onClick={addEvidence} className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded-full flex items-center gap-1 border border-slate-600">
                          <Plus size={14} /> {t.addStory}
                      </button>
                  </div>
                  <p className="text-sm text-slate-400 mb-6">{t.askPeople}</p>
                  
                  <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                     {userData.externalStories.length === 0 && (
+                     {userData.evidenceBank.length === 0 && (
                          <div className="text-center py-10 text-slate-600 italic border-2 border-dashed border-slate-800 rounded-lg">
                              {t.noStoriesYet}
                          </div>
                      )}
-                     {userData.externalStories.map((story) => (
+                     {userData.evidenceBank.map((story) => (
                          <div key={story.id} className="bg-slate-800 p-4 rounded-lg border border-slate-700 relative group">
-                             <button onClick={() => deleteStory(story.id)} className="absolute top-2 right-2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button onClick={() => deleteEvidence(story.id)} className="absolute top-2 right-2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                  <Trash2 size={16} />
                              </button>
                              <textarea 
@@ -1003,7 +1034,7 @@ ${stories}
                                  placeholder={t.storyPlaceholder}
                                  rows={3}
                                  value={story.text}
-                                 onChange={e => updateStory(story.id, 'text', e.target.value)}
+                                 onChange={e => updateEvidence(story.id, 'text', e.target.value)}
                              />
                              {story.action && (
                                  <div className="bg-slate-900/50 p-3 rounded text-sm space-y-1 mb-3">
@@ -1067,19 +1098,20 @@ ${stories}
                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                      <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><Compass className="text-purple-400"/> {t.directionalIntention}</h3>
                      <label className="block text-sm text-slate-400 mb-2">{t.yearlyThemeLabel}</label>
-                     <div className="flex gap-2">
-                         <input 
+                     <div className="flex flex-col gap-2">
+                         <textarea 
                              value={userData.yearlyTheme}
                              onChange={e => setUserData({...userData, yearlyTheme: e.target.value})}
                              placeholder={t.themePlaceholder}
-                             className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white"
+                             className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white resize-none h-24"
                          />
                          <button 
                             onClick={handleSuggestTheme}
                             disabled={isSuggestingTheme}
-                            className="bg-slate-800 hover:bg-slate-700 text-white p-2 rounded border border-slate-700"
+                            className="bg-slate-800 hover:bg-slate-700 text-white p-2 rounded border border-slate-700 flex items-center justify-center gap-2 text-sm"
                          >
-                            {isSuggestingTheme ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
+                            {isSuggestingTheme ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
+                            {t.suggestTheme}
                          </button>
                      </div>
                  </div>
@@ -1098,8 +1130,7 @@ ${stories}
                                      setUserData({...userData, drainingPatterns: newD});
                                  }}
                                  placeholder={t.drainingPatternHelp}
-                                 className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm"
-                                 rows={2}
+                                 className="w-full bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm resize-none h-24"
                              />
                          </div>
                          <div className="relative">
@@ -1128,8 +1159,7 @@ ${stories}
                                      setUserData({...userData, reframedBoundaries: newB});
                                  }}
                                  placeholder={t.reframedBoundaryHelp}
-                                 className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm"
-                                 rows={2}
+                                 className="w-full bg-slate-800 border border-slate-700 rounded p-3 text-white text-sm resize-none h-24"
                              />
                          </div>
                      </div>
@@ -1150,7 +1180,7 @@ ${stories}
                                    + {s}
                                </button>
                            ))}
-                           {userData.externalStories.filter(s => s.pattern).map((s, i) => (
+                           {userData.evidenceBank.filter(s => s.pattern).map((s, i) => (
                                <button 
                                   key={`s-${i}`} 
                                   onClick={() => selectCandidateToAnchor(s.pattern!)}
@@ -1327,9 +1357,7 @@ ${stories}
        </header>
 
        <div className="grid md:grid-cols-3 gap-8">
-            {/* Left Col: Shifts & Logging */}
             <div className="md:col-span-2 space-y-8">
-                 {/* Active Shifts Card */}
                  <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 p-6 rounded-2xl relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-4 opacity-5"><Target size={120} /></div>
                       <div className="flex justify-between items-center mb-4">
@@ -1356,7 +1384,6 @@ ${stories}
                       )}
                  </div>
 
-                 {/* Logging Area */}
                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
                       <h3 className="font-semibold text-white mb-6 flex items-center gap-2"><Sun className="text-yellow-500" size={18}/> {t.todaysLog}</h3>
                       
@@ -1419,9 +1446,7 @@ ${stories}
                  </div>
             </div>
 
-            {/* Right Col: Feedback & History */}
             <div className="space-y-6">
-                 {/* Spark Feedback */}
                  {lastSpark && (
                      <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border border-yellow-500/30 p-6 rounded-2xl animate-fade-in relative overflow-hidden">
                          <div className="absolute top-0 right-0 p-2 opacity-20"><Zap size={80} className="text-yellow-500"/></div>
@@ -1434,7 +1459,6 @@ ${stories}
                      </div>
                  )}
 
-                 {/* Recent Entries */}
                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit max-h-[600px] overflow-y-auto custom-scrollbar">
                      <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><History size={18} className="text-slate-400"/> {t.recentEntries}</h3>
                      <div className="space-y-4">
@@ -1473,7 +1497,6 @@ ${stories}
           </header>
 
           <div className="grid md:grid-cols-3 gap-8">
-              {/* Context Column */}
               <div className="space-y-4">
                   <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl">
                       <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">{t.contextLast7Days}</h3>
@@ -1496,7 +1519,6 @@ ${stories}
                   </div>
               </div>
 
-              {/* Reflection Form */}
               <div className="md:col-span-2 space-y-6">
                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                       <div className="flex justify-between items-center mb-6">
@@ -1558,7 +1580,6 @@ ${stories}
                       </div>
                   </div>
                   
-                  {/* Past Reflections List */}
                   {userData.weeklyReflections.length > 0 && (
                       <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                           <h3 className="font-semibold text-white mb-4">{t.recentEntries}</h3>
@@ -1611,7 +1632,7 @@ ${stories}
 
             <div className="grid md:grid-cols-3 gap-8">
                  {/* Left: Stats Panel */}
-                 <div className="space-y-6">
+                 <div className="space-y-6 min-w-0"> {/* FIX: min-w-0 on grid item */}
                      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
                          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">{t.quarterlyRewind}</h3>
                          
@@ -1631,14 +1652,29 @@ ${stories}
                              <div className="text-lg font-bold text-primary-400">{topAnchor}</div>
                          </div>
 
-                         <div className="h-32 w-full">
+                         <div>
                              <div className="text-xs text-slate-500 mb-2">{t.trendLine}</div>
-                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={graphData}>
-                                    <Line type="monotone" dataKey="energy" stroke="#818cf8" strokeWidth={2} dot={false} />
-                                    <YAxis domain={[1, 5]} hide />
-                                </LineChart>
-                             </ResponsiveContainer>
+                             <div className="h-40 w-full min-w-0 relative"> {/* FIX: relative + min-w-0 on container */}
+                                {graphData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%" debounce={200}>
+                                        <LineChart data={graphData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} vertical={false} />
+                                            <XAxis dataKey="name" hide />
+                                            <Line type="monotone" dataKey="energy" stroke="#818cf8" strokeWidth={2} dot={{ r: 3, fill: '#818cf8' }} activeDot={{ r: 5 }} />
+                                            <YAxis domain={[0, 6]} hide />
+                                            <Tooltip 
+                                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }} 
+                                                itemStyle={{ color: '#e2e8f0' }}
+                                                cursor={{ stroke: '#475569', strokeWidth: 1 }}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full w-full flex items-center justify-center text-xs text-slate-600 border border-dashed border-slate-800 rounded">
+                                        {t.noDataYet}
+                                    </div>
+                                )}
+                             </div>
                          </div>
                      </div>
                  </div>

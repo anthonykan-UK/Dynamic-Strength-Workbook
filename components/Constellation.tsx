@@ -34,7 +34,8 @@ export const Constellation: React.FC<ConstellationProps> = ({ userData, language
     // Data Processing: Layout Logic
     const { nodes, links, unconnectedStories, svgHeight } = useMemo(() => {
         const anchors = userData.coreAnchors.filter(Boolean);
-        const stories = userData.externalStories;
+        // FIX: Use evidenceBank and add fallback to empty array
+        const stories = userData.evidenceBank || [];
         
         // --- LAYOUT CONFIGURATION ---
         // Mobile: Vertical Stack (Totem). Desktop: Circular Orbit.

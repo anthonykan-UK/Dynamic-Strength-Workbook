@@ -89,20 +89,25 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
           
           // Execute the update based on tool name
           if (name === 'proposeStrength') {
-              const newStrengths = [...userData.assessmentStrengths];
-              const emptyIdx = newStrengths.findIndex(s => !s);
-              if (emptyIdx !== -1) newStrengths[emptyIdx] = args.strength;
-              else newStrengths.push(args.strength);
-              
-              setUserData(prev => ({...prev, assessmentStrengths: newStrengths.slice(0, 5)})); 
+              // Add to Strength Pool, check for duplicates
+              const strength = args.strength;
+              setUserData(prev => {
+                  if (prev.strengthPool.includes(strength)) return prev;
+                  return {
+                      ...prev,
+                      strengthPool: [...prev.strengthPool, strength]
+                  };
+              });
           } 
           else if (name === 'proposeStory') {
               const newStory: Story = {
                   id: crypto.randomUUID(),
                   text: args.text,
-                  pattern: args.pattern
+                  pattern: args.pattern,
+                  action: args.action,
+                  feeling: args.feeling
               };
-              setUserData(prev => ({...prev, externalStories: [...prev.externalStories, newStory]}));
+              setUserData(prev => ({...prev, evidenceBank: [...prev.evidenceBank, newStory]}));
           }
           else if (name === 'proposeInternalAudit') {
               // Append to existing text with a newline if it exists
@@ -330,7 +335,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
                           onClick={() => handleToolAction(index, 'save')}
                           className="flex-1 px-3 py-2 rounded-lg text-sm font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors flex items-center justify-center gap-2"
                       >
-                          <Save size={16} /> Save to Workbook
+                          <Save size={16} /> Save
                       </button>
                   </div>
               </div>

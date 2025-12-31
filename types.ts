@@ -63,8 +63,9 @@ export interface UserData {
   useBNODeck: boolean; // New: Toggle for HK BNO specific cards
   yearlyTheme: string; // "One focused area or theme" (Page 6)
   internalAudit: InternalAudit; // Phase 1: Weigh
-  assessmentStrengths: string[]; // Phase 1: Hypotheses
-  externalStories: Story[]; // Phase 1 & 2: Assess
+  assessmentStrengths: string[]; // Phase 1: Top 5 Hypotheses
+  strengthPool: string[]; // Phase 1: The Reservoir of discovered strengths
+  evidenceBank: Story[]; // Phase 1 & 2: Unified Evidence (formerly externalStories)
   drainingPatterns: string[]; // Phase 2: Boundary
   reframedBoundaries: string[]; // Phase 2: Boundary
   coreAnchors: string[]; // Phase 2: Venture
@@ -74,6 +75,9 @@ export interface UserData {
   quarterlyCheckIns: QuarterlyCheckIn[];
 }
 
+// Rename alias for backward compatibility in components if needed, though we will update components to use evidenceBank
+export type ExternalStory = Story; 
+
 export const INITIAL_USER_DATA: UserData = {
   name: '',
   email: '',
@@ -81,7 +85,8 @@ export const INITIAL_USER_DATA: UserData = {
   yearlyTheme: '',
   internalAudit: { momentum: '', draining: '' },
   assessmentStrengths: ['', '', '', '', ''],
-  externalStories: [],
+  strengthPool: [],
+  evidenceBank: [],
   drainingPatterns: [''],
   reframedBoundaries: [''],
   coreAnchors: ['', '', '', '', ''],
@@ -101,13 +106,4 @@ export const TERRITORIES = [
   'Creativity & Expression',
   'Environment & Space',
   'Leadership'
-];
-
-export const COMMON_STRENGTHS = [
-  "Strategic", "Empathy", "Achiever", "Learner", "Intellection",
-  "Adaptability", "Connectedness", "Developer", "Positivity", "Relator",
-  "Analytical", "Context", "Futuristic", "Ideation", "Input",
-  "Command", "Communication", "Competition", "Maximizer", "Self-Assurance",
-  "Arranger", "Discipline", "Consistency", "Focus", "Restorative",
-  "Woo", "Includer", "Harmony", "Responsibility", "Belief"
 ];

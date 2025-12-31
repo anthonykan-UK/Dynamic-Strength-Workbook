@@ -58,14 +58,14 @@ export const Layout: React.FC<LayoutProps> = ({
         setView(view);
         setMobileMenuOpen(false);
       }}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-base font-medium ${
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-base font-medium text-left border-l-4 ${
         currentView === view
-          ? 'bg-primary-600/10 text-primary-400 border-l-4 border-primary-500'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+          ? 'bg-primary-600/10 text-primary-400 border-primary-500'
+          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200 border-transparent'
       }`}
     >
-      <Icon size={20} />
-      {label}
+      <div className="shrink-0"><Icon size={20} /></div>
+      <span className="leading-tight">{label}</span>
     </button>
   );
 
@@ -95,14 +95,14 @@ export const Layout: React.FC<LayoutProps> = ({
   const PrivacyToggle = () => (
       <button 
         onClick={togglePrivacyMode}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-base font-medium ${
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-base font-medium text-left border-l-4 border-transparent ${
             privacyMode 
             ? 'text-primary-400 bg-primary-900/10' 
             : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
         }`}
         title={privacyMode ? t.privacyOff : t.privacyMode}
       >
-          {privacyMode ? <EyeOff size={20} /> : <Eye size={20} />}
+          <div className="shrink-0">{privacyMode ? <EyeOff size={20} /> : <Eye size={20} />}</div>
           {t.privacyMode}
       </button>
   );
@@ -150,7 +150,7 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className="p-4 border-t border-slate-800">
             <button 
                 onClick={() => setShowHelp(true)}
-                className="w-full flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-sm"
+                className="w-full flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-sm border-l-4 border-transparent"
             >
                 <HelpCircle size={18} />
                 {t.helpTitle}
@@ -186,7 +186,7 @@ export const Layout: React.FC<LayoutProps> = ({
             <div className="pt-4 mt-4 border-t border-slate-800">
                 <button 
                     onClick={() => { setShowHelp(true); setMobileMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-lg transition-colors text-base font-medium"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-lg transition-colors text-base font-medium border-l-4 border-transparent"
                 >
                     <HelpCircle size={18} />
                     {t.helpTitle}
