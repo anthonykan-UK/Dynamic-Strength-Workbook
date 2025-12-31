@@ -286,6 +286,12 @@ export const TRANSLATIONS = {
     coachWelcome: "Hi! I'm your Dynamic Strength Assistant. I follow the WAVES Cycle to help you build momentum. Where should we start?",
     coachError: "I'm having trouble connecting. Please try again later.",
     askGuidance: "Ask for guidance on the WAVES cycle...",
+    voiceMode: "Voice Mode",
+    textMode: "Text Mode",
+    voiceConnecting: "Connecting to Coach...",
+    voiceActive: "Listening...",
+    voiceSpeaking: "Coach is speaking...",
+    voiceStop: "End Voice Session",
     
     // Help & Guide
     helpTitle: "Workbook Guide",
@@ -299,7 +305,7 @@ export const TRANSLATIONS = {
         start: [
             "**Welcome to Dynamic Strength.** This isn't just a workbook; it's a practice ground.",
             "**1. The Rule of 5:** A strength isn't proven by a single story. Aim to capture **4-5 stories** across different life areas (Work, Relationships, Crisis) to build a 'Constellation of Evidence'.",
-            "**2. Your AI Partner:** The Strength Coach isn't just a chatbot. It's an **Experience Engineer**. Look for the 'Interactive Strength Spotter' button in the Discovery Phase to start a guided interview.",
+            "**2. Your AI Partner:** The Strength Coach isn't just a chatbot. It's an **Experience Engineer**. Use the **Voice Mode** (Headphones icon) for a relaxed, hands-free interview experience.",
             "**3. The Process:** \n- **Discovery:** Build your **Strength Pool**.\n- **Phase 1:** Select Top 5 & Gather Evidence.\n- **Phase 2:** Define Anchors & Boundaries.\n- **Phase 3:** Scale with 5% Shifts.",
             "**4. Privacy Guard:** Working in a public space? Toggle the **Eye Icon** in the sidebar. This blurs your text until you hover over it, keeping your reflections private."
         ],
@@ -615,6 +621,12 @@ export const TRANSLATIONS = {
     coachWelcome: "你好！我是你的動態優勢助理。我遵循 WAVES 循環來協助你建立動力。我們從哪裡開始？",
     coachError: "我現在連接有點問題，請稍後再試。",
     askGuidance: "詢問關於 WAVES 循環的指引...",
+    voiceMode: "語音模式",
+    textMode: "文字模式",
+    voiceConnecting: "正在連接教練...",
+    voiceActive: "正在聆聽...",
+    voiceSpeaking: "教練正在說話...",
+    voiceStop: "結束語音",
     
     // Help & Guide
     helpTitle: "使用指南",
@@ -628,7 +640,7 @@ export const TRANSLATIONS = {
         start: [
             "**歡迎來到動態優勢。** 這不僅是一本練習冊，而是一個修練場。",
             "**1. 五項法則 (The Rule of 5)：** 一個故事不足以證明優勢。目標是在不同生活範疇（工作、關係、危機）收集 **4-5 個故事**，建立你的「優勢星系 (Constellation of Evidence)」。",
-            "**2. 你的 AI 夥伴：** 優勢教練不僅僅是聊天機器人，它是你的 **體驗工程師**。在「發掘優勢」階段尋找「互動式優勢識別」按鈕，開始引導式訪談。",
+            "**2. 你的 AI 夥伴：** 優勢教練不僅僅是聊天機器人，它是你的 **體驗工程師**。使用 **語音模式** (耳機圖示) 來體驗放鬆、免提的訪談。",
             "**3. 流程：** \n- **發掘：** 建立你的 **優勢池 (Strength Pool)**。\n- **第一階段：** 選擇首 5 個優勢並收集證據。\n- **第二階段：** 定義錨點與界線。\n- **第三階段：** 透過 5% 微調進行擴展。",
             "**4. 私隱保護 (Privacy Guard)：** 在公共場合？點擊側邊欄的 **眼睛圖示**。這會模糊你的文字，直到你將滑鼠懸停在上面，保護你的私隱。"
         ],

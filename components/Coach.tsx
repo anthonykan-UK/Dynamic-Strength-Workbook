@@ -3,17 +3,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { UserData, Language, Story, TERRITORIES, ViewState } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { streamCoachResponse } from '../services/ai';
-import { MessageCircle, X, Send, Sparkles, Loader2, Save, Check, Award, BookOpen, Anchor, Compass, Scale, ShieldAlert, BatteryWarning } from 'lucide-react';
+import { LiveClient } from '../services/live';
+import { MessageCircle, X, Send, Sparkles, Loader2, Save, Check, Award, BookOpen, Anchor, Compass, Scale, ShieldAlert, BatteryWarning, Headphones, Mic, MicOff, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { GenerateContentResponse } from '@google/genai';
 
+// --- FEATURE FLAG ---
+// Set to TRUE only when Voice AI is fully tested and native-sounding.
+// Currently disabled to prevent poor UX (interruptions, robotic tone).
+const VOICE_MODE_ENABLED = false;
+
 interface CoachProps {
   userData: UserData;
-  setUserData: React.Dispatch<React.SetStateAction<UserData>>; // Now can update data
+  setUserData: React.Dispatch<React.SetStateAction<UserData>>; 
   language: Language;
-  triggerPrompt?: string; // Allow external triggering
+  triggerPrompt?: string; 
   onCloseTrigger?: () => void;
-  // Navigation Props for Smart Close
   currentView: ViewState;
   onViewChange: (view: ViewState) => void;
   onNotify: (msg: string) => void;
@@ -36,24 +41,28 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
   const t = TRANSLATIONS[language];
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Track if user saved anything in this session
   const [hasSavedData, setHasSavedData] = useState(false);
 
-  // Initialize or handle external trigger
+  // --- Voice Mode State ---
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState<'connecting' | 'active' | 'error' | null>(null);
+  const liveClientRef = useRef<LiveClient | null>(null);
+
+  // Initialize Default Message
   useEffect(() => {
      if (messages.length === 0) {
          setMessages([{ role: 'model', text: t.coachWelcome }]);
      }
   }, [language, t.coachWelcome]);
 
+  // Handle Trigger
   useEffect(() => {
       if (triggerPrompt) {
           setIsOpen(true);
-          // Small delay to ensure render
+          // If triggered, we default to TEXT mode for consistency
+          setIsVoiceMode(false);
           setTimeout(() => {
               handleSend(triggerPrompt);
               if(onCloseTrigger) onCloseTrigger();
@@ -67,36 +76,98 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isVoiceMode]);
+
+  // --- Voice Mode Logic (Dormant when VOICE_MODE_ENABLED is false) ---
+  const toggleVoiceMode = async () => {
+      if (!VOICE_MODE_ENABLED) return;
+
+      if (isVoiceMode) {
+          // Turn OFF
+          if (liveClientRef.current) {
+              liveClientRef.current.disconnect(() => {});
+              liveClientRef.current = null;
+          }
+          setIsVoiceMode(false);
+          setVoiceStatus(null);
+      } else {
+          // Turn ON
+          setIsVoiceMode(true);
+          setVoiceStatus('connecting');
+          
+          if (!liveClientRef.current) {
+              liveClientRef.current = new LiveClient();
+          }
+
+          try {
+              await liveClientRef.current.connect(
+                  userData,
+                  language,
+                  // onMessage (Transcript)
+                  (text, isFinal) => {
+                      // Optional: Show transcript as it comes in
+                  },
+                  // onToolCall
+                  (toolCall) => {
+                      setMessages(prev => [...prev, {
+                          role: 'model',
+                          toolCall: {
+                              id: toolCall.id,
+                              name: toolCall.name,
+                              args: toolCall.args,
+                              status: 'pending'
+                          }
+                      }]);
+                  },
+                  // onStatusChange
+                  (isActive) => setVoiceStatus(isActive ? 'active' : null)
+              );
+          } catch (e) {
+              setVoiceStatus('error');
+              setTimeout(() => {
+                  setIsVoiceMode(false);
+                  setVoiceStatus(null);
+                  onNotify("Microphone access needed for Voice Mode");
+              }, 3000);
+          }
+      }
+  };
+
+  // Cleanup on unmount or close
+  useEffect(() => {
+      return () => {
+          if (liveClientRef.current) {
+              liveClientRef.current.disconnect(() => {});
+          }
+      };
+  }, []);
 
   const handleClose = () => {
       setIsOpen(false);
-      // Smart Close: If user saved data in early stages, jump to Phase 1
+      // Clean up voice if active
+      if (isVoiceMode) toggleVoiceMode();
+      
       if (hasSavedData && (currentView === 'welcome' || currentView === 'discovery')) {
           onViewChange('phase1');
           onNotify(t.notifications.jumpingToPhase1);
       }
-      setHasSavedData(false); // Reset session tracking
+      setHasSavedData(false);
   };
 
+  // --- SHARED TOOL LOGIC ---
   const handleToolAction = (index: number, action: 'save' | 'dismiss') => {
       const msg = messages[index];
       if (!msg.toolCall) return;
 
       if (action === 'save') {
-          setHasSavedData(true); // Mark session as productive
+          setHasSavedData(true);
           const { name, args } = msg.toolCall;
           
-          // Execute the update based on tool name
           if (name === 'proposeStrength') {
-              // Add to Strength Pool, check for duplicates
               const strength = args.strength;
               setUserData(prev => {
                   if (prev.strengthPool.includes(strength)) return prev;
-                  return {
-                      ...prev,
-                      strengthPool: [...prev.strengthPool, strength]
-                  };
+                  return { ...prev, strengthPool: [...prev.strengthPool, strength] };
               });
           } 
           else if (name === 'proposeStory') {
@@ -110,18 +181,11 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
               setUserData(prev => ({...prev, evidenceBank: [...prev.evidenceBank, newStory]}));
           }
           else if (name === 'proposeInternalAudit') {
-              // Append to existing text with a newline if it exists
               const type = args.type as 'momentum' | 'draining';
               setUserData(prev => {
                   const currentText = prev.internalAudit[type];
                   const newText = currentText ? `${currentText}\n\n- ${args.insight}` : `- ${args.insight}`;
-                  return {
-                      ...prev,
-                      internalAudit: {
-                          ...prev.internalAudit,
-                          [type]: newText
-                      }
-                  };
+                  return { ...prev, internalAudit: { ...prev.internalAudit, [type]: newText } };
               });
           }
           else if (name === 'proposeAnchor') {
@@ -129,14 +193,12 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
               const emptyIdx = newAnchors.findIndex(a => !a);
               if (emptyIdx !== -1) newAnchors[emptyIdx] = args.anchor;
               else newAnchors.push(args.anchor);
-              
               setUserData(prev => ({...prev, coreAnchors: newAnchors.slice(0, 5)}));
           }
           else if (name === 'proposeBoundary') {
               const { type, content } = args;
               if (type === 'pattern') {
                   setUserData(prev => {
-                      // Append to the first slot if it exists, or set it
                       const current = prev.drainingPatterns[0];
                       const newP = current ? `${current}\n- ${content}` : content;
                       const newArr = [...prev.drainingPatterns];
@@ -175,13 +237,11 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
 
     if (!overrideInput) setInput('');
     
-    // Optimistic UI for User Message
     const userMsgObj: ChatMessage = { role: 'user', text: textToSend };
     setMessages(prev => [...prev, userMsgObj]);
     setIsLoading(true);
 
     try {
-      // We pass text content to AI
       const history = messages.filter(m => m.text).map(m => ({
         role: m.role,
         parts: [{ text: m.text }]
@@ -194,8 +254,6 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
       
       for await (const chunk of stream) {
         const c = chunk as GenerateContentResponse;
-        
-        // Manual Text Extraction to avoid "non-text parts" warning from SDK getter
         const parts = c.candidates?.[0]?.content?.parts || [];
         let chunkText = "";
         
@@ -215,11 +273,9 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
             });
         }
 
-        // Handle Function Calls (Tools)
         for (const part of parts) {
             if (part.functionCall) {
                 const fc = part.functionCall;
-                // Add a SEPARATE message for the tool card
                 setMessages(prev => [...prev, {
                     role: 'model',
                     toolCall: {
@@ -239,7 +295,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
     }
   };
 
-  // --- Render Helper for Tool Cards ---
+  // --- Render Tool Card ---
   const renderToolCard = (msg: ChatMessage, index: number) => {
       if (!msg.toolCall) return null;
       const { name, args, status } = msg.toolCall;
@@ -316,7 +372,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
 
       return (
           <div key={index} className="flex justify-start w-full animate-fade-in my-2">
-              <div className={`bg-slate-800 border-2 ${colorClass} rounded-xl p-4 w-[85%] shadow-lg relative overflow-hidden`}>
+              <div className={`bg-slate-800 border-2 ${colorClass} rounded-xl p-4 w-[90%] shadow-lg relative overflow-hidden z-20`}>
                   <div className="absolute top-0 right-0 p-2 opacity-10"><Sparkles size={40}/></div>
                   <div className={`flex items-center gap-2 mb-2 ${iconColor} font-semibold text-base uppercase tracking-wide`}>
                       {React.cloneElement(icon as React.ReactElement<any>, { className: iconColor })} {title}
@@ -362,16 +418,59 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
           <Sparkles size={20} />
           <h3 className="font-semibold text-base">{t.strengthCoachTitle}</h3>
         </div>
-        <button onClick={handleClose} className="hover:bg-primary-500 p-1 rounded">
-          <X size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+            {VOICE_MODE_ENABLED && (
+                <button 
+                    onClick={toggleVoiceMode}
+                    className={`p-2 rounded-lg transition-colors ${isVoiceMode ? 'bg-white text-primary-600' : 'hover:bg-primary-500 text-white'}`}
+                    title={isVoiceMode ? t.textMode : t.voiceMode}
+                >
+                    {isVoiceMode ? <Mic size={18} className="animate-pulse" /> : <Headphones size={18} />}
+                </button>
+            )}
+            <button onClick={handleClose} className="hover:bg-primary-500 p-1 rounded">
+                <X size={20} />
+            </button>
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50">
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50 relative">
+        {/* VOICE MODE VISUALIZER OVERLAY */}
+        {isVoiceMode && VOICE_MODE_ENABLED && (
+            <div className="absolute inset-0 z-10 bg-slate-900/90 backdrop-blur flex flex-col items-center justify-center text-center p-6 space-y-6">
+                <div className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 ${
+                    voiceStatus === 'active' ? 'bg-primary-500/20 shadow-[0_0_50px_rgba(99,102,241,0.3)] animate-pulse' : 'bg-slate-800'
+                }`}>
+                    {voiceStatus === 'connecting' && <Loader2 size={40} className="text-primary-400 animate-spin" />}
+                    {voiceStatus === 'active' && <Mic size={40} className="text-primary-400" />}
+                    {voiceStatus === 'error' && <AlertCircle size={40} className="text-red-400" />}
+                </div>
+                
+                <div className="space-y-2">
+                    <h4 className="text-lg font-bold text-white">
+                        {voiceStatus === 'connecting' ? t.voiceConnecting : 
+                         voiceStatus === 'active' ? t.voiceActive : 
+                         voiceStatus === 'error' ? "Connection Error" : "Ready"}
+                    </h4>
+                    <p className="text-sm text-slate-400 max-w-[200px] mx-auto">
+                        {voiceStatus === 'active' ? "Speak naturally. I'll listen for strengths." : "Connecting to Gemini Live..."}
+                    </p>
+                </div>
+
+                <button 
+                    onClick={toggleVoiceMode}
+                    className="px-6 py-2 rounded-full bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-colors text-sm font-medium"
+                >
+                    {t.voiceStop}
+                </button>
+            </div>
+        )}
+
+        {/* Regular Chat Messages (Underneath or Visible if Text Mode) */}
         {messages.map((msg, idx) => {
             if (msg.toolCall) return renderToolCard(msg, idx);
-            if (!msg.text) return null; // Skip empty text placeholders
+            if (!msg.text) return null;
 
             return (
                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -385,7 +484,7 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
                 </div>
             );
         })}
-        {isLoading && (
+        {isLoading && !isVoiceMode && (
           <div className="flex justify-start">
             <div className="bg-slate-800 p-3 rounded-lg rounded-bl-none border border-slate-700">
               <Loader2 className="animate-spin text-primary-500" size={16} />
@@ -395,28 +494,30 @@ export const Coach: React.FC<CoachProps> = ({ userData, setUserData, language, t
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-3 bg-slate-850 border-t border-slate-700">
-        <div className="relative">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder={t.askGuidance}
-            className="w-full bg-slate-900 border border-slate-700 rounded-full py-3 px-4 pr-12 text-base text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-          />
-          <div className="absolute right-2 top-2 flex items-center gap-1">
-             <button
-                onClick={() => handleSend()}
-                disabled={!input.trim() || isLoading}
-                className="p-2 bg-primary-600 rounded-full text-white hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed w-8 h-8 flex items-center justify-center"
-             >
-                <Send size={14} />
-             </button>
+      {/* Input - Hidden if Voice Mode is Active */}
+      {!isVoiceMode && (
+          <div className="p-3 bg-slate-850 border-t border-slate-700">
+            <div className="relative">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder={t.askGuidance}
+                className="w-full bg-slate-900 border border-slate-700 rounded-full py-3 px-4 pr-12 text-base text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              />
+              <div className="absolute right-2 top-2 flex items-center gap-1">
+                 <button
+                    onClick={() => handleSend()}
+                    disabled={!input.trim() || isLoading}
+                    className="p-2 bg-primary-600 rounded-full text-white hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed w-8 h-8 flex items-center justify-center"
+                 >
+                    <Send size={14} />
+                 </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
